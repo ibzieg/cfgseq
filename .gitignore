@@ -11,3 +11,7 @@ Cargo.lock
 
 # JetBrains
 .idea/
+
+#Added by cargo
+
+/target
