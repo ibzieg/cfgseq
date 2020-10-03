@@ -1,6 +1,6 @@
 [package]
 name = "cfgseq"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["ibzieg <ian.b.zieg@gmail.com>"]
 edition = "2018"
 
@@ -8,3 +8,6 @@ edition = "2018"
 
 [dependencies]
 portmidi = "^0.2"
+serde = "^1.0.108"
+serde_json = "^1.0.56"
+docopt = "^1.1.0"
