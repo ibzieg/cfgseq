@@ -29,6 +29,7 @@ mod context;
 mod midi;
 mod midi_controller;
 mod sequencer;
+mod sequence_player;
 
 // Options -----------------------------------------------------------------------------------------
 
