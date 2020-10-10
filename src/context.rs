@@ -1,7 +1,7 @@
 /*
  * Copyright 2020, Ian Zieg
  *
- * This file is part of a program called "specsynth"
+ * This file is part of a program called "cfgseq"
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

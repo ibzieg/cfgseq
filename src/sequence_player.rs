@@ -1,10 +1,18 @@
 extern crate portmidi;
 
-use portmidi::{OutputPort, MidiMessage};
+use portmidi::MidiMessage;
 
-use crate::config::{TICKS_PER_MEASURE};
+use crate::config::TICKS_PER_MEASURE;
 
-const CHANNEL: u8 = 13;
+pub struct Instrument {
+    channel: u8,
+}
+
+impl Instrument {
+    pub fn new(channel: u8) -> Instrument {
+        Instrument { channel: channel }
+    }
+}
 
 pub struct Sequence {
     steps: Vec<u8>,
@@ -16,17 +24,23 @@ impl Sequence {
             steps: vec![pitch; count],
         }
     }
+
+    pub fn set_steps(&mut self, steps: Vec<u8>) {
+        self.steps = steps;
+    }
 }
 
 pub struct SequencePlayer {
-    sequence: Sequence,
+    pub instrument: Instrument,
+    pub sequence: Sequence,
     step_index: usize,
     clock_count: usize,
 }
 
 impl SequencePlayer {
-    pub fn new(seq: Sequence) -> SequencePlayer {
+    pub fn new(inst: Instrument, seq: Sequence) -> SequencePlayer {
         SequencePlayer {
+            instrument: inst,
             sequence: seq,
             step_index: 0,
             clock_count: 0,
@@ -51,11 +65,11 @@ impl SequencePlayer {
             if self.step_index % 2 == 0 {
                 pitch = self.sequence.steps[self.step_index / 2];
                 // println!("{} {} note-on", self.step_index, pitch);
-                messages.push(note_on(pitch, velocity));
+                messages.push(note_on(self.instrument.channel, pitch, velocity));
             } else {
-                pitch = self.sequence.steps[(self.step_index-1) / 2];
+                pitch = self.sequence.steps[(self.step_index - 1) / 2];
                 // println!("{} {} note-off", self.step_index, pitch);
-                messages.push(note_off(pitch, 0));
+                messages.push(note_off(self.instrument.channel, pitch, 0));
             }
             self.step_index += 1;
         }
@@ -66,18 +80,18 @@ impl SequencePlayer {
     }
 }
 
-pub fn note_on(pitch: u8, velocity: u8) -> MidiMessage {
+pub fn note_on(channel: u8, pitch: u8, velocity: u8) -> MidiMessage {
     MidiMessage {
-        status: 0x90 + CHANNEL,
+        status: 0x90 + channel,
         data1: pitch,
         data2: velocity,
         data3: 0,
     }
 }
 
-pub fn note_off(pitch: u8, velocity: u8) -> MidiMessage {
+pub fn note_off(channel: u8, pitch: u8, velocity: u8) -> MidiMessage {
     MidiMessage {
-        status: 0x80 + CHANNEL,
+        status: 0x80 + channel,
         data1: pitch,
         data2: velocity,
         data3: 0,

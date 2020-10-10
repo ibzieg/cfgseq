@@ -1,7 +1,7 @@
 /*
  * Copyright 2020, Ian Zieg
  *
- * This file is part of a program called "specsynth"
+ * This file is part of a program called "cfgseq"
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,20 +16,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+use std::fs;
+
 use docopt::Docopt;
 use serde::Deserialize;
 
 use crate::config::{PROJECT_NAME, VERSION};
 use crate::context::Context;
 use crate::midi::list_midi_devices;
+use crate::models::Performance;
 use crate::sequencer::play_sequencer;
 
 mod config;
 mod context;
 mod midi;
 mod midi_controller;
-mod sequencer;
+mod models;
 mod sequence_player;
+mod sequencer;
 
 // Options -----------------------------------------------------------------------------------------
 
@@ -37,9 +41,9 @@ const USAGE: &'static str = "
 CFG SEQ
 
 Usage:
-  specsynth list-devices
-  specsynth [--midi-device=<device_name>] [--midi-channel=<channel_index>] [--debug]
-  specsynth (-h | --help)
+  cfgseq list-devices
+  cfgseq [--midi-device=<device_name>] [--midi-channel=<channel_index>] [--debug]
+  cfgseq (-h | --help)
 
 Options:
   -h --help                        Show this screen.
@@ -69,6 +73,11 @@ fn run() {
         .unwrap_or_else(|e| e.exit());
 
     if args.cmd_list_devices {
+        let yaml_text: String = fs::read_to_string("./data/example.yaml")
+            .expect("Something went wrong reading the file");
+        let perf: Performance = serde_yaml::from_str(&yaml_text).expect("yaml parsing error");
+        println!("{}", perf.instruments[0].name);
+
         list_midi_devices();
     } else {
         play_sequencer(&context_from_args(&args));
