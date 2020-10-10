@@ -18,16 +18,20 @@
  */
 extern crate portmidi;
 
-use std::sync::mpsc;
+use std::sync::mpsc::{Sender, Receiver, channel};
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::{thread, time};
+use std::ffi::OsStr;
 
+use ansi_term::{Color, Style};
 use portmidi::MidiMessage;
 
 use crate::config::CLOCK_MULTIPLIER;
 use crate::context::Context;
 use crate::midi::{is_channel_message, parse_channel, parse_status, start_midi_channel};
 use crate::sequence_player::{Instrument, Sequence, SequencePlayer};
+use crate::performance_file::{load_performance_file, start_file_watcher};
+use crate::models::{Performance};
 
 pub fn now_millis() -> u128 {
     let start = SystemTime::now();
@@ -46,9 +50,9 @@ pub fn average(values: &[f64]) -> f64 {
 }
 
 pub fn start_clock_multiplier(
-    clock_recv: mpsc::Receiver<u64>,
-    clock_active: mpsc::Receiver<bool>,
-    clock_send: mpsc::Sender<u64>,
+    clock_recv: Receiver<u64>,
+    clock_active: Receiver<bool>,
+    clock_send: Sender<u64>,
 ) {
     let mut clock_enabled = false;
     let mut tick_duration: time::Duration = time::Duration::from_micros(0);
@@ -94,28 +98,22 @@ pub fn start_clock_multiplier(
     });
 }
 
-pub fn start_midi_controller(context: &Context) {
-    let midi_recv = start_midi_channel();
+pub fn start_performance(
+    context: &Context,
+    clock_reset_recv: Receiver<bool>,
+    mult_clock_recv: Receiver<u64>,
+) {
+    let mut perf: Performance = Performance::new();
+    match load_performance_file(OsStr::new(&context.performance.to_owned())) {
+        Ok(initial_perf) => perf = initial_perf,
+        Err(e) => {
+            println!("Failed to load file: {}", e);
+        }
+    }
 
-    let debug = context.debug;
-    let midi_output = context.midi_output.to_string();
-    let midi_channel = context.midi_channel;
+    let (perf_update_send, perf_update_recv): (Sender<Performance>, Receiver<Performance>) = channel();
 
-    let mut clock_count = 0;
-    let mut beat_count = 0;
-    let mut last_tick = now_millis();
-    let mut tick_duration_history: [f64; 48] = [0.0; 48];
 
-    let (midi_clock_send, midi_clock_recv): (mpsc::Sender<u64>, mpsc::Receiver<u64>) =
-        mpsc::channel();
-    let (midi_state_send, midi_state_recv): (mpsc::Sender<bool>, mpsc::Receiver<bool>) =
-        mpsc::channel();
-    let (clock_reset_send, clock_reset_recv): (mpsc::Sender<bool>, mpsc::Receiver<bool>) =
-        mpsc::channel();
-    let (mult_clock_send, mult_clock_recv): (mpsc::Sender<u64>, mpsc::Receiver<u64>) =
-        mpsc::channel();
-
-    start_clock_multiplier(midi_clock_recv, midi_state_recv, mult_clock_send);
 
     thread::spawn(move || {
         let device_index: i32 = 4;
@@ -144,6 +142,11 @@ pub fn start_midi_controller(context: &Context) {
         ]);
 
         loop {
+            let perf_update = perf_update_recv.try_recv();
+            if perf_update.is_ok() {
+
+                println!("perf update");
+            }
             let reset_msg = clock_reset_recv.try_recv();
             if reset_msg.is_ok() {
                 player1.reset();
@@ -168,121 +171,118 @@ pub fn start_midi_controller(context: &Context) {
         }
     });
 
+    start_file_watcher(&context.performance.to_owned(), perf_update_send);
+}
+
+pub fn start_controller(context: &Context) {
+    let midi_recv = start_midi_channel();
+
+    let debug = context.debug;
+    let midi_output = context.midi_output.to_string();
+    let midi_channel = context.midi_channel;
+
+    let mut clock_count = 0;
+    let mut beat_count = 0;
+    let mut last_tick = now_millis();
+    let mut tick_duration_history: [f64; 48] = [0.0; 48];
+
+    let (midi_clock_send, midi_clock_recv): (Sender<u64>, Receiver<u64>) =
+        channel();
+    let (midi_state_send, midi_state_recv): (Sender<bool>, Receiver<bool>) =
+        channel();
+    let (clock_reset_send, clock_reset_recv): (Sender<bool>, Receiver<bool>) =
+        channel();
+    let (mult_clock_send, mult_clock_recv): (Sender<u64>, Receiver<u64>) =
+        channel();
+
+    start_clock_multiplier(midi_clock_recv, midi_state_recv, mult_clock_send);
+
+    start_performance(context, clock_reset_recv, mult_clock_recv);
+
     thread::spawn(move || {
         println!("Started listening on output '{}'", midi_output);
 
+        fn print_timestamp(timestamp: u32) {
+            print!(
+                "{}",
+                Style::new().bold().paint(format!("[{:0>8}]\t", timestamp))
+            );
+        }
+
+        fn log(text: String, timestamp: u32) {
+            print_timestamp(timestamp);
+            println!("{}", text);
+        }
+
         loop {
             let (device, events) = midi_recv.recv().unwrap();
-            let device_name = device.name().to_string();
+            // let device_name = device.name().to_string();
             for event in events {
                 if debug {
                     println!("[{}] {:?}", device, event);
                 }
                 let message = event.message;
 
-                if is_channel_message(message.status) {
-                    // Channel Messages
-                    let channel = parse_channel(message.status);
-                    let status_type = parse_status(message.status);
+                // Global messages
+                if message.status == 248 {
+                    // Timing Clock
+                    let ppq = 24;
 
-                    if debug {
-                        println!(
-                            "Channel Event: Type={} Channel={} Data1={} Data2={}",
-                            status_type, channel, message.data1, message.data2,
+                    let tick = now_millis();
+                    let tick_elapsed = (tick - last_tick) as f64;
+                    last_tick = tick;
+                    tick_duration_history[clock_count % tick_duration_history.len()] =
+                        tick_elapsed;
+
+                    let avg_dur_ms = average(&tick_duration_history);
+
+                    midi_clock_send
+                        .send((avg_dur_ms * 1000.0) as u64)
+                        .expect("midi_clock_send failed");
+
+                    if clock_count % ppq == 0 {
+                        let ms_per_beat = avg_dur_ms * (ppq as f64);
+                        let ms_per_min = 60.0 * 1000.0;
+                        let bpm = ms_per_min / ms_per_beat;
+
+                        log(
+                            format!(
+                                "{}beat_count={}\tbpm={:.1} clock={:.2}ms",
+                                " ".repeat(beat_count),
+                                beat_count,
+                                bpm,
+                                avg_dur_ms
+                            ),
+                            event.timestamp,
                         );
-                    }
+                        beat_count = (beat_count + 1) % 4;
 
-                    if status_type == 144 {
-                        // Note On
-                        if midi_output == device_name && midi_channel == channel as i32 {
-                            // Play a note
-                        }
-                    } else if status_type == 128 {
-                        // Note Off
-                    } else if status_type == 176 {
-                        // Control Change
-                        if debug {
-                            println!("CC d1={} d2={}", message.data1, message.data2);
-                        }
-
-                        if midi_output == device_name
-                            && message.data1 == 10
-                            && channel == midi_channel as u8
-                        {
-
-                            // Perform control change 10
-                        }
-
-                        if midi_output == device_name
-                            && message.data1 == 11
-                            && channel == midi_channel as u8
-                        {
-                            // Perform control change 11
+                        if beat_count == 0 {
+                            clock_reset_send
+                                .send(true)
+                                .expect("clock_reset_send_failed");
                         }
                     }
-                } else {
-                    // Global messages
-                    if message.status == 248 {
-                        // Timing Clock
-                        let ppq = 24;
 
-                        let tick = now_millis();
-                        let tick_elapsed = (tick - last_tick) as f64;
-                        last_tick = tick;
-                        tick_duration_history[clock_count % tick_duration_history.len()] =
-                            tick_elapsed;
-
-                        let avg_dur_ms = average(&tick_duration_history);
-
-                        midi_clock_send
-                            .send((avg_dur_ms * 1000.0) as u64)
-                            .expect("midi_clock_send failed");
-
-                        if clock_count % ppq == 0 {
-                            let ms_per_beat = avg_dur_ms * (ppq as f64);
-                            let ms_per_min = 60.0 * 1000.0;
-                            let bpm = ms_per_min / ms_per_beat;
-
-                            print!("{}\t", event.timestamp);
-                            if beat_count > 0 {
-                                print!("\t")
-                            }
-                            println!(
-                                "beat_count={} bpm={:.1} avg_ms={:.2}",
-                                beat_count, bpm, avg_dur_ms
-                            );
-                            beat_count = (beat_count + 1) % 4;
-
-                            if beat_count == 0 {
-                                clock_reset_send
-                                    .send(true)
-                                    .expect("clock_reset_send_failed");
-                            }
-                        }
-
-                        clock_count += 1;
-
-                    // if clock_count % (ppq as usize / sync) == 0 {
-                    //
-                    // }
-                    } else if message.status == 250 {
-                        // Start
-                        beat_count = 0;
-                        clock_count = 0;
-                        last_tick = now_millis();
-                        print!("{}\t", event.timestamp);
-                        println!("START")
-                    } else if message.status == 252 {
-                        // Stop
-                        print!("{}\t", event.timestamp);
-                        println!("STOP");
-                        midi_state_send.send(false).expect("midi_state_send failed");
-                        clock_reset_send
-                            .send(true)
-                            .expect("clock_reset_send failed");
-                    }
+                    clock_count += 1;
+                } else if message.status == 250 {
+                    // Start
+                    beat_count = 0;
+                    clock_count = 0;
+                    last_tick = now_millis();
+                    log(Color::Purple.paint("START").to_string(), event.timestamp);
+                } else if message.status == 252 {
+                    // Stop
+                    log(Color::Cyan.paint("STOP").to_string(), event.timestamp);
+                    midi_state_send.send(false).expect("midi_state_send failed");
+                    clock_reset_send
+                        .send(true)
+                        .expect("clock_reset_send failed");
                 }
             }
         }
     });
+
+
+
 }

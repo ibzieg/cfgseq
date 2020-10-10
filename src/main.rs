@@ -16,7 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-use std::fs;
+use std::thread;
+use std::time::Duration;
 
 use docopt::Docopt;
 use serde::Deserialize;
@@ -24,16 +25,15 @@ use serde::Deserialize;
 use crate::config::{PROJECT_NAME, VERSION};
 use crate::context::Context;
 use crate::midi::list_midi_devices;
-use crate::models::Performance;
-use crate::sequencer::play_sequencer;
+use crate::controller::start_controller;
 
 mod config;
 mod context;
 mod midi;
-mod midi_controller;
+mod controller;
 mod models;
 mod sequence_player;
-mod sequencer;
+mod performance_file;
 
 // Options -----------------------------------------------------------------------------------------
 
@@ -42,7 +42,7 @@ CFG SEQ
 
 Usage:
   cfgseq list-devices
-  cfgseq [--midi-device=<device_name>] [--midi-channel=<channel_index>] [--debug]
+  cfgseq [--midi-device=<device_name>] [--midi-channel=<channel_index>] [--performance=<perf_file>] [--debug]
   cfgseq (-h | --help)
 
 Options:
@@ -50,13 +50,15 @@ Options:
   -d --debug                       Enable debug features
   --midi-device=<device_name>      MIDI input device name.
   --midi-channel=<channel_index>   MIDI input channel index.
+  --performance=<perf_file>        Performance definition file.
 ";
 
 #[derive(Debug, Deserialize)]
 struct Args {
     flag_debug: bool,
     flag_midi_device: Vec<String>,
-    flag_midi_channel: Option<i32>,
+    flag_midi_channel: Option<u8>,
+    flag_performance: Vec<String>,
     cmd_list_devices: bool,
 }
 
@@ -73,14 +75,9 @@ fn run() {
         .unwrap_or_else(|e| e.exit());
 
     if args.cmd_list_devices {
-        let yaml_text: String = fs::read_to_string("./data/example.yaml")
-            .expect("Something went wrong reading the file");
-        let perf: Performance = serde_yaml::from_str(&yaml_text).expect("yaml parsing error");
-        println!("{}", perf.instruments[0].name);
-
         list_midi_devices();
     } else {
-        play_sequencer(&context_from_args(&args));
+        start(&context_from_args(&args));
     }
 }
 
@@ -92,6 +89,10 @@ fn context_from_args(args: &Args) -> Context {
         println!("{:?}", args);
     }
 
+    if args.flag_performance.len() > 0 {
+        context.performance = args.flag_performance[0].to_owned();
+    }
+
     if args.flag_midi_device.len() > 0 {
         context.midi_output = args.flag_midi_device[0].to_owned();
     }
@@ -100,4 +101,12 @@ fn context_from_args(args: &Args) -> Context {
     }
 
     context
+}
+
+pub fn start(context: &Context) {
+    start_controller(context);
+
+    loop {
+        thread::sleep(Duration::from_millis(60_000));
+    }
 }

@@ -18,11 +18,23 @@
  */
 use serde::{Deserialize, Serialize};
 
+use crate::config::{DEFAULT_PARTS_PER_QUARTER, DEFAULT_MIDI_CHANNEL};
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Controller {
     pub device: String,
     pub channel: u8,
-    pub ppq: u32,
+    pub ppq: Option<u64>,
+}
+
+impl Controller {
+    pub fn new() -> Controller {
+        Controller {
+            device: String::new(),
+            channel: DEFAULT_MIDI_CHANNEL,
+            ppq: Some(DEFAULT_PARTS_PER_QUARTER),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -74,4 +86,15 @@ pub struct Performance {
     pub playlist: Vec<String>,
     pub scenes: Vec<Scene>,
     pub instruments: Vec<Instrument>,
+}
+
+impl Performance {
+    pub fn new() -> Performance {
+        Performance {
+            controller: Controller::new(),
+            playlist: Vec::new(),
+            scenes: Vec::new(),
+            instruments: Vec::new(),
+        }
+    }
 }

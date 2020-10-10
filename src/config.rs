@@ -24,9 +24,9 @@ pub const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 // Context  ----------------------------------------------------------------------------------------
 
-pub const DEFAULT_MIDI_CHANNEL: i32 = 0;
+pub const DEFAULT_MIDI_CHANNEL: u8 = 1;
 
 pub const CLOCK_MULTIPLIER: u64 = 84;
-pub const PARTS_PER_QUARTER: u64 = 24;
+pub const DEFAULT_PARTS_PER_QUARTER: u64 = 24;
 
-pub const TICKS_PER_MEASURE: u64 = CLOCK_MULTIPLIER * PARTS_PER_QUARTER * 4;
+pub const TICKS_PER_MEASURE: u64 = CLOCK_MULTIPLIER * DEFAULT_PARTS_PER_QUARTER * 4;

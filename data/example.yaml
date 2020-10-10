@@ -18,7 +18,7 @@ playlist:
   - two
   - two
   - break
-  - break
+  - break2
   - break1
   - three
   - three
@@ -48,10 +48,10 @@ scenes:
 
 
 instruments:
-  - name: inst1
+  - name: inst124456
     device: MOTU828x
     channel: 12
-    mod:
+    data:
       - device: IAC1
         channel: 3
         control: 40
@@ -62,35 +62,35 @@ instruments:
       - name: quarter
         rate: 4
         steps:
-          - {pitch: [36], velocity: 118, mod: [120, 70]}
+          - {pitch: [36], velocity: 118, data: [120, 70]}
           - null
           - null
           - null
 
-          - {pitch: [36], velocity: 93, mod: [60, 68]}
+          - {pitch: [36], velocity: 93, data: [60, 68]}
           - null
           - null
           - null
 
-          - {pitch: [36], velocity: 60, mod: [60, 38]}
+          - {pitch: [36], velocity: 60, data: [60, 38]}
           - null
           - null
           - null
 
-          - {pitch: [36], velocity: 60, mod: [60, 108]}
+          - {pitch: [36], velocity: 60, data: [60, 108]}
           - null
           - null
           - null
       - name: A
         rate: 4
         steps:
-          - {pitch: [36], velocity: 39, mod: [67, 94]}
+          - {pitch: [36], velocity: 39, data: [67, 94]}
           - null
           - null
           - null
 
           - null
-          - {pitch: [36], velocity: 88, mod: [59, 46]}
+          - {pitch: [36], velocity: 88, data: [59, 46]}
           - null
           - null
 
@@ -101,13 +101,13 @@ instruments:
 
           - null
           - null
-          - {pitch: [36], velocity: 91, mod: [104, 26]}
+          - {pitch: [36], velocity: 91, data: [104, 26]}
           - null
 
-  - name: poly2
+  - name: poly235
     device: MOTU828x
-    channel: 13
-    mod:
+    channel: 12
+    data:
       - device: IAC1
         channel: 4
         control: 40
@@ -118,12 +118,12 @@ instruments:
       - name: quarter
         rate: 4
         steps:
-          - {pitch: [36], velocity: 118, mod: [120, 70]}
+          - {pitch: [36], velocity: 118, data: [120, 70]}
           - null
           - null
           - null
 
-          - {pitch: [36], velocity: 93, mod: [60, 68]}
+          - {pitch: [36], velocity: 93, data: [60, 68]}
           - null
           - null
           - null

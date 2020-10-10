@@ -19,8 +19,9 @@
 use crate::config::DEFAULT_MIDI_CHANNEL;
 
 pub struct Context {
-    pub midi_channel: i32,
+    pub midi_channel: u8,
     pub midi_output: String,
+    pub performance: String,
     pub debug: bool,
 }
 
@@ -29,6 +30,7 @@ impl Context {
         Context {
             midi_channel: DEFAULT_MIDI_CHANNEL,
             midi_output: String::new(),
+            performance: String::new(),
             debug: false,
         }
     }
