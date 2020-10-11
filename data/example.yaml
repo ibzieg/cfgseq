@@ -1,5 +1,5 @@
 controller:
-  device: IAC1
+  device: "828x MIDI Port"
   channel: 7
   ppq: 24
 
@@ -9,48 +9,21 @@ playlist:
   - intro
   - intro
   - intro
-  - one
-  - one
-  - one
-  - one
-  - two
-  - two
-  - two
-  - two
-  - break
-  - break2
-  - break1
-  - three
-  - three
-  - three
-  - three
-  - end
-  - end
-  - outro
-  - outro
 
 scenes:
   - name: intro
-    master: drum1
+    master: inst1
     tracks:
-      - instrument: drum1
-        play: [C, A, B, A]
+      - instrument: inst1
+        play: [A, B]
 
-      - instrument: drum2
-        play: [half]
-
-      - instrument: mono1
-        follow: drum1
+      - instrument: inst2
         play: [A, C, A, B]
 
-      - instrument: mono2
-        play: [A]
-
-
 instruments:
-  - name: inst124456
+  - name: inst1
     device: MOTU828x
-    channel: 12
+    channel: 14
     data:
       - device: IAC1
         channel: 3
@@ -59,8 +32,7 @@ instruments:
         channel: 10
         control: 37
     sequences:
-      - name: quarter
-        rate: 4
+      - name: A
         steps:
           - {pitch: [36], velocity: 118, data: [120, 70]}
           - null
@@ -81,8 +53,7 @@ instruments:
           - null
           - null
           - null
-      - name: A
-        rate: 4
+      - name: B
         steps:
           - {pitch: [36], velocity: 39, data: [67, 94]}
           - null
@@ -104,9 +75,9 @@ instruments:
           - {pitch: [36], velocity: 91, data: [104, 26]}
           - null
 
-  - name: poly235
+  - name: inst2
     device: MOTU828x
-    channel: 12
+    channel: 1
     data:
       - device: IAC1
         channel: 4
@@ -115,15 +86,33 @@ instruments:
         channel: 10
         control: 56
     sequences:
-      - name: quarter
-        rate: 4
+      - name: A
         steps:
-          - {pitch: [36], velocity: 118, data: [120, 70]}
+          - {pitch: [31], velocity: 118, data: [120, 70]}
           - null
+          - {pitch: [34], velocity: 118, data: [120, 70]}
           - null
+          - {pitch: [38], velocity: 118, data: [120, 70]}
           - null
-
-          - {pitch: [36], velocity: 93, data: [60, 68]}
+          - {pitch: [41], velocity: 118, data: [120, 70]}
           - null
+      - name: B
+        steps:
+          - {pitch: [55], velocity: 118, data: [120, 70]}
           - null
+          - {pitch: [53], velocity: 118, data: [120, 70]}
+          - null
+          - {pitch: [50], velocity: 118, data: [120, 70]}
+          - null
+          - {pitch: [46], velocity: 118, data: [120, 70]}
+          - null
+      - name: C
+        steps:
+          - {pitch: [31], velocity: 118, data: [120, 70]}
+          - null
+          - {pitch: [34], velocity: 118, data: [120, 70]}
+          - null
+          - {pitch: [38], velocity: 118, data: [120, 70]}
+          - null
+          - {pitch: [41], velocity: 118, data: [120, 70]}
           - null

@@ -18,13 +18,26 @@
  */
 use serde::{Deserialize, Serialize};
 
-use crate::config::{DEFAULT_PARTS_PER_QUARTER, DEFAULT_MIDI_CHANNEL};
+use crate::config::{DEFAULT_MIDI_CHANNEL, DEFAULT_PARTS_PER_QUARTER};
+
+
+// Controller --------------------------------------------------------------------------------------
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Controller {
     pub device: String,
     pub channel: u8,
     pub ppq: Option<u64>,
+}
+
+impl Clone for Controller {
+    fn clone(&self) -> Controller {
+        Controller {
+            device: self.device.to_owned(),
+            channel: self.channel.to_owned(),
+            ppq: self.ppq.to_owned(),
+        }
+    }
 }
 
 impl Controller {
@@ -37,6 +50,8 @@ impl Controller {
     }
 }
 
+// Track -------------------------------------------------------------------------------------------
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Track {
     pub instrument: String,
@@ -44,12 +59,36 @@ pub struct Track {
     pub play: Vec<String>,
 }
 
+impl Clone for Track {
+    fn clone(&self) -> Track {
+        Track {
+            instrument: self.instrument.to_owned(),
+            follow: self.follow.to_owned(),
+            play: self.play.to_vec(),
+        }
+    }
+}
+
+// Scene -------------------------------------------------------------------------------------------
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Scene {
     pub name: String,
-    pub master: String,
+    pub master: Option<String>,
     pub tracks: Vec<Track>,
 }
+
+impl Clone for Scene {
+    fn clone(&self) -> Scene {
+        Scene {
+            name: self.name.to_owned(),
+            master: self.master.to_owned(),
+            tracks: self.tracks.to_vec(),
+        }
+    }
+}
+
+// SequenceStep ------------------------------------------------------------------------------------
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SequenceStep {
@@ -58,11 +97,25 @@ pub struct SequenceStep {
     pub data: Option<Vec<u8>>,
 }
 
+impl Clone for SequenceStep {
+    fn clone(&self) -> SequenceStep {
+        SequenceStep {
+            pitch: self.pitch.to_owned(),
+            velocity: self.velocity.to_owned(),
+            data: self.data.to_owned(),
+        }
+    }
+}
+
+// Sequence ----------------------------------------------------------------------------------------
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Sequence {
     pub name: String,
     pub steps: Vec<Option<SequenceStep>>,
 }
+
+// ModDevice ---------------------------------------------------------------------------------------
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ModDevice {
@@ -70,6 +123,8 @@ pub struct ModDevice {
     pub channel: u32,
     pub control: u8,
 }
+
+// Instrument --------------------------------------------------------------------------------------
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Instrument {
@@ -79,6 +134,20 @@ pub struct Instrument {
     pub data: Option<Vec<ModDevice>>,
     pub sequences: Vec<Sequence>,
 }
+
+impl Instrument {
+    pub fn find_sequence(&self, name: &String) -> Option<&Sequence> {
+        let mut result: Option<&Sequence> = None;
+        for sequence in &self.sequences {
+            if &sequence.name == name {
+                result = Some(sequence);
+            }
+        }
+        result
+    }
+}
+
+// Performance -------------------------------------------------------------------------------------
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Performance {
@@ -96,5 +165,25 @@ impl Performance {
             scenes: Vec::new(),
             instruments: Vec::new(),
         }
+    }
+
+    pub fn find_scene(&self, name: &String) -> Option<&Scene> {
+        let mut result: Option<&Scene> = None;
+        for scene in &self.scenes {
+            if &scene.name == name {
+                result = Some(scene);
+            }
+        }
+        result
+    }
+
+    pub fn find_instrument(&self, name: &String) -> Option<&Instrument> {
+        let mut result: Option<&Instrument> = None;
+        for instrument in &self.instruments {
+            if &instrument.name == name {
+                result = Some(instrument);
+            }
+        }
+        result
     }
 }

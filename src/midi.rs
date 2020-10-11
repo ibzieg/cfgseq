@@ -59,14 +59,17 @@ pub fn start_midi_channel(
     rx
 }
 
+#[allow(dead_code)]
 pub fn is_channel_message(status_bytes: u8) -> bool {
     status_bytes >= 128 && status_bytes <= 239
 }
 
+#[allow(dead_code)]
 pub fn parse_channel(status_bytes: u8) -> u8 {
     status_bytes & 0b00001111
 }
 
+#[allow(dead_code)]
 pub fn parse_status(status_bytes: u8) -> u8 {
     status_bytes & 0b011110000
 }

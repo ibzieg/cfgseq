@@ -16,30 +16,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-use std::fs;
 use std::ffi::OsStr;
-use std::sync::mpsc::channel;
+use std::fs;
+use std::sync::mpsc::Sender;
 use std::thread;
 use std::time::Duration;
-use std::error::Error;
-use std::sync::mpsc::{Sender};
 
-use notify::{RecommendedWatcher, RecursiveMode, Watcher};
-use notify::event::ModifyKind::Data;
 use notify::event::DataChange::Content;
+use notify::event::ModifyKind::Data;
+use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 
 use crate::models::Performance;
 
-
 pub fn load_performance_file(file_path: &OsStr) -> Result<Performance, std::io::Error> {
     match fs::read_to_string(file_path) {
-        Ok(yaml_text) => {
-            match serde_yaml::from_str::<Performance>(&yaml_text) {
-                Ok(perf) => Ok(perf),
-                Err(e) => Err(std::io::Error::new(std::io::ErrorKind::Other,e))
-            }
+        Ok(yaml_text) => match serde_yaml::from_str::<Performance>(&yaml_text) {
+            Ok(perf) => Ok(perf),
+            Err(e) => Err(std::io::Error::new(std::io::ErrorKind::Other, e)),
         },
-        Err(e) => Err(std::io::Error::new(std::io::ErrorKind::Other,e))
+        Err(e) => Err(std::io::Error::new(std::io::ErrorKind::Other, e)),
     }
 }
 
@@ -51,22 +46,18 @@ pub fn start_file_watcher(file_path: &String, perf_send: Sender<Performance>) {
                 Ok(event) => {
                     if event.kind == notify::EventKind::Modify(Data(Content)) {
                         match load_performance_file(event.paths[0].as_os_str()) {
-                            Ok(perf) => {
-                                // println!("file changed");
-                                perf_send.send(perf).unwrap();
-                            },
-                            Err(e) => {
-                                println!("Error parsing file: {}", e);
-                            }
+                            Ok(perf) => perf_send.send(perf).unwrap(),
+                            Err(e) => println!("Error parsing file: {}", e),
                         }
                     }
                 }
                 Err(e) => println!("watch error: {:?}", e),
             })
-                .expect("failed to create watcher");
+            .expect("failed to create watcher");
 
-
-        watcher.watch(watch_file_path, RecursiveMode::Recursive).unwrap();
+        watcher
+            .watch(watch_file_path, RecursiveMode::Recursive)
+            .unwrap();
         loop {
             // Keep the thread running so that we can watch the file indefinitely
             thread::sleep(Duration::from_millis(60_000));

@@ -24,16 +24,19 @@ use serde::Deserialize;
 
 use crate::config::{PROJECT_NAME, VERSION};
 use crate::context::Context;
-use crate::midi::list_midi_devices;
 use crate::controller::start_controller;
+use crate::midi::list_midi_devices;
 
 mod config;
 mod context;
-mod midi;
 mod controller;
+mod log;
+mod midi;
 mod models;
-mod sequence_player;
+mod performance;
 mod performance_file;
+mod sequence_player;
+mod types;
 
 // Options -----------------------------------------------------------------------------------------
 
@@ -42,22 +45,18 @@ CFG SEQ
 
 Usage:
   cfgseq list-devices
-  cfgseq [--midi-device=<device_name>] [--midi-channel=<channel_index>] [--performance=<perf_file>] [--debug]
+  cfgseq [--performance=<perf_file>] [--debug]
   cfgseq (-h | --help)
 
 Options:
   -h --help                        Show this screen.
   -d --debug                       Enable debug features
-  --midi-device=<device_name>      MIDI input device name.
-  --midi-channel=<channel_index>   MIDI input channel index.
   --performance=<perf_file>        Performance definition file.
 ";
 
 #[derive(Debug, Deserialize)]
 struct Args {
     flag_debug: bool,
-    flag_midi_device: Vec<String>,
-    flag_midi_channel: Option<u8>,
     flag_performance: Vec<String>,
     cmd_list_devices: bool,
 }
@@ -91,13 +90,6 @@ fn context_from_args(args: &Args) -> Context {
 
     if args.flag_performance.len() > 0 {
         context.performance = args.flag_performance[0].to_owned();
-    }
-
-    if args.flag_midi_device.len() > 0 {
-        context.midi_output = args.flag_midi_device[0].to_owned();
-    }
-    if args.flag_midi_channel.is_some() {
-        context.midi_channel = args.flag_midi_channel.unwrap();
     }
 
     context

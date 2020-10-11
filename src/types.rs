@@ -16,16 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-pub struct Context {
-    pub performance: String,
-    pub debug: bool,
-}
-
-impl Context {
-    pub fn new() -> Context {
-        Context {
-            performance: String::new(),
-            debug: false,
-        }
-    }
-}
+pub type BeatTime = (BarCount, BeatCount);
+pub type BarCount = u64;
+pub type BeatCount = u64;
