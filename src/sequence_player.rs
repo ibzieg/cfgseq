@@ -1,47 +1,43 @@
+/*
+ * Copyright 2020, Ian Zieg
+ *
+ * This file is part of a program called "cfgseq"
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 extern crate portmidi;
 
 use portmidi::MidiMessage;
 
-use crate::config::TICKS_PER_MEASURE;
+use crate::models::{Instrument, Sequence};
+use crate::config::{TICKS_PER_MEASURE, DEFAULT_VELOCITY};
+use crate::midi;
 
-pub struct Instrument {
-    channel: u8,
-}
-
-impl Instrument {
-    pub fn new(channel: u8) -> Instrument {
-        Instrument { channel: channel }
-    }
-}
-
-pub struct Sequence {
-    steps: Vec<u8>,
-}
-
-impl Sequence {
-    pub fn new(count: usize, pitch: u8) -> Sequence {
-        Sequence {
-            steps: vec![pitch; count],
-        }
-    }
-
-    pub fn set_steps(&mut self, steps: Vec<u8>) {
-        self.steps = steps;
-    }
-}
+// Sequence Player ---------------------------------------------------------------------------------
 
 pub struct SequencePlayer {
     pub instrument: Instrument,
-    pub sequence: Sequence,
+    pub seq_name: String,
     step_index: usize,
     clock_count: usize,
 }
 
 impl SequencePlayer {
-    pub fn new(inst: Instrument, seq: Sequence) -> SequencePlayer {
+    pub fn new(inst: Instrument, seq_name: String) -> SequencePlayer {
         SequencePlayer {
             instrument: inst,
-            sequence: seq,
+            seq_name: seq_name,
             step_index: 0,
             clock_count: 0,
         }
@@ -54,46 +50,51 @@ impl SequencePlayer {
 
     pub fn clock(&mut self) -> Vec<MidiMessage> {
         // double the step length, so that we can note-off on odd steps
-        let total_steps = self.sequence.steps.len() * 2;
-        let ticks_per_step = TICKS_PER_MEASURE as usize / total_steps;
-
         let mut messages: Vec<MidiMessage> = Vec::new();
 
-        if self.clock_count % ticks_per_step == 0 && self.step_index < total_steps {
-            let pitch: u8;
-            let velocity: u8 = 100;
-            if self.step_index % 2 == 0 {
-                pitch = self.sequence.steps[self.step_index / 2];
-                // println!("{} {} note-on", self.step_index, pitch);
-                messages.push(note_on(self.instrument.channel, pitch, velocity));
-            } else {
-                pitch = self.sequence.steps[(self.step_index - 1) / 2];
-                // println!("{} {} note-off", self.step_index, pitch);
-                messages.push(note_off(self.instrument.channel, pitch, 0));
-            }
-            self.step_index += 1;
+        match self.instrument.find_sequence(&self.seq_name) {
+            Some(sequence) => {
+                let total_steps = sequence.steps.len() * 2;
+                let ticks_per_step = TICKS_PER_MEASURE as usize / total_steps;
+
+                if self.clock_count % ticks_per_step == 0 && self.step_index < total_steps {
+                    if self.step_index % 2 == 0 {
+                        let maybe_step = &sequence.steps[self.step_index / 2];
+                        if maybe_step.is_some() {
+                            let step = maybe_step.as_ref().unwrap().clone();
+                            let mut velocity = DEFAULT_VELOCITY;
+                            match step.velocity {
+                                Some(v) => velocity = v,
+                                _ => {}
+                            }
+                            match &step.pitch {
+                                Some(ps) => for p in ps {
+                                    messages.push(midi::note_on(self.instrument.channel, *p, velocity));
+                                },
+                                None => {},
+                            }
+                        }
+                    } else {
+                        let maybe_step = &sequence.steps[(self.step_index - 1) / 2];
+                        if maybe_step.is_some() {
+                            let step = maybe_step.as_ref().unwrap().clone();
+                            let velocity = 0;
+                            match &step.pitch {
+                                Some(ps) => for p in ps {
+                                    messages.push(midi::note_on(self.instrument.channel, *p, velocity));
+                                },
+                                None => {},
+                            }
+                        }
+                    }
+                    self.step_index += 1;
+                }
+            },
+            None => {},
         }
 
         self.clock_count += 1;
 
         messages
-    }
-}
-
-pub fn note_on(channel: u8, pitch: u8, velocity: u8) -> MidiMessage {
-    MidiMessage {
-        status: 0x90 + channel,
-        data1: pitch,
-        data2: velocity,
-        data3: 0,
-    }
-}
-
-pub fn note_off(channel: u8, pitch: u8, velocity: u8) -> MidiMessage {
-    MidiMessage {
-        status: 0x80 + channel,
-        data1: pitch,
-        data2: velocity,
-        data3: 0,
     }
 }

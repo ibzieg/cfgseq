@@ -26,6 +26,8 @@ pub const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 pub const DEFAULT_MIDI_CHANNEL: u8 = 1;
 
+pub const DEFAULT_VELOCITY: u8 = 100;
+
 pub const CLOCK_MULTIPLIER: u64 = 84;
 pub const DEFAULT_PARTS_PER_QUARTER: u64 = 24;
 

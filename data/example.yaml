@@ -15,15 +15,19 @@ scenes:
     master: inst1
     tracks:
       - instrument: inst1
-        play: [A, B]
+        play: [A]
 
       - instrument: inst2
-        play: [A, C, A, B]
+        play: [D3]
+#        play: [A, C, A, B]
+
+      - instrument: drum2
+        play: [half]
 
 instruments:
   - name: inst1
     device: MOTU828x
-    channel: 14
+    channel: 13
     data:
       - device: IAC1
         channel: 3
@@ -75,6 +79,24 @@ instruments:
           - {pitch: [36], velocity: 91, data: [104, 26]}
           - null
 
+  - name: drum2
+    device: MOTU828x
+    channel: 13
+    data:
+      - device: IAC1
+        channel: 3
+        control: 40
+      - device: MOTU828x
+        channel: 10
+        control: 37
+    sequences:
+      - name: half
+        steps:
+          - null
+          - {pitch: [38], velocity: 118, data: [120, 70]}
+          - null
+          - {pitch: [38], velocity: 93, data: [60, 68]}
+
   - name: inst2
     device: MOTU828x
     channel: 1
@@ -115,4 +137,22 @@ instruments:
           - {pitch: [38], velocity: 118, data: [120, 70]}
           - null
           - {pitch: [41], velocity: 118, data: [120, 70]}
+          - null
+
+      - name: D3
+        steps:
+          - {pitch: [31], velocity: 118, data: [120, 70]}
+          - null
+          - null
+          - {pitch: [34], velocity: 118, data: [120, 70]}
+          - null
+          - null
+          - {pitch: [38], velocity: 118, data: [120, 70]}
+          - null
+          - null
+          - {pitch: [41], velocity: 118, data: [120, 70]}
+          - null
+          - null
+          - { pitch: [ 48 ], velocity: 118, data: [ 120, 70 ] }
+          - null
           - null

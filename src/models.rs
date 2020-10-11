@@ -19,6 +19,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::config::{DEFAULT_MIDI_CHANNEL, DEFAULT_PARTS_PER_QUARTER};
+use serde::de::Unexpected::Seq;
 
 
 // Controller --------------------------------------------------------------------------------------
@@ -102,7 +103,10 @@ impl Clone for SequenceStep {
         SequenceStep {
             pitch: self.pitch.to_owned(),
             velocity: self.velocity.to_owned(),
-            data: self.data.to_owned(),
+            data: match &self.data {
+                Some(d) => Some(d.to_vec()),
+                None => None,
+            },
         }
     }
 }
@@ -115,6 +119,24 @@ pub struct Sequence {
     pub steps: Vec<Option<SequenceStep>>,
 }
 
+impl Sequence {
+    pub fn new() -> Sequence {
+        Sequence {
+            name: String::new(),
+            steps: Vec::new(),
+        }
+    }
+}
+
+impl Clone for Sequence {
+    fn clone(&self) -> Sequence {
+        Sequence {
+            name: self.name.to_string(),
+            steps: self.steps.to_vec(),
+        }
+    }
+}
+
 // ModDevice ---------------------------------------------------------------------------------------
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -124,18 +146,38 @@ pub struct ModDevice {
     pub control: u8,
 }
 
+impl Clone for ModDevice {
+    fn clone(&self) -> ModDevice {
+        ModDevice {
+            device: self.device.to_string(),
+            channel: self.channel.to_owned(),
+            control: self.control.to_owned(),
+        }
+    }
+}
+
 // Instrument --------------------------------------------------------------------------------------
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Instrument {
     pub name: String,
     pub device: String,
-    pub channel: u32,
+    pub channel: u8,
     pub data: Option<Vec<ModDevice>>,
     pub sequences: Vec<Sequence>,
 }
 
 impl Instrument {
+    pub fn new() -> Instrument {
+        Instrument {
+            name: String::new(),
+            device: String::new(),
+            channel: DEFAULT_MIDI_CHANNEL,
+            data: None,
+            sequences: Vec::new(),
+        }
+    }
+
     pub fn find_sequence(&self, name: &String) -> Option<&Sequence> {
         let mut result: Option<&Sequence> = None;
         for sequence in &self.sequences {
@@ -144,6 +186,21 @@ impl Instrument {
             }
         }
         result
+    }
+}
+
+impl Clone for Instrument {
+    fn clone(&self) -> Instrument {
+        Instrument {
+            name: self.name.to_string(),
+            device: self.name.to_string(),
+            channel: self.channel.to_owned(),
+            data: match &self.data {
+                Some(d) => Some(d.to_vec()),
+                None => None,
+            },
+            sequences: self.sequences.to_vec(),
+        }
     }
 }
 

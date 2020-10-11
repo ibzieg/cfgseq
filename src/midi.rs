@@ -21,8 +21,11 @@ extern crate portmidi;
 use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
+use portmidi::MidiMessage;
 
 const MIDI_BUFFER_SIZE: usize = 1024;
+
+// MIDI Devices ------------------------------------------------------------------------------------
 
 pub fn list_midi_devices() {
     let context = portmidi::PortMidi::new().unwrap();
@@ -35,7 +38,9 @@ pub fn list_midi_devices() {
     }
 }
 
-pub fn start_midi_channel(
+// MIDI Listener -----------------------------------------------------------------------------------
+
+pub fn start_midi_listener(
 ) -> mpsc::Receiver<(portmidi::DeviceInfo, std::vec::Vec<portmidi::MidiEvent>)> {
     let midi_read_wait = Duration::from_millis(10);
     let context = portmidi::PortMidi::new().unwrap();
@@ -59,6 +64,8 @@ pub fn start_midi_channel(
     rx
 }
 
+// MIDI Messages -----------------------------------------------------------------------------------
+
 #[allow(dead_code)]
 pub fn is_channel_message(status_bytes: u8) -> bool {
     status_bytes >= 128 && status_bytes <= 239
@@ -72,4 +79,22 @@ pub fn parse_channel(status_bytes: u8) -> u8 {
 #[allow(dead_code)]
 pub fn parse_status(status_bytes: u8) -> u8 {
     status_bytes & 0b011110000
+}
+
+pub fn note_on(channel: u8, pitch: u8, velocity: u8) -> MidiMessage {
+    MidiMessage {
+        status: 0x90 + channel,
+        data1: pitch,
+        data2: velocity,
+        data3: 0,
+    }
+}
+
+pub fn note_off(channel: u8, pitch: u8, velocity: u8) -> MidiMessage {
+    MidiMessage {
+        status: 0x80 + channel,
+        data1: pitch,
+        data2: velocity,
+        data3: 0,
+    }
 }

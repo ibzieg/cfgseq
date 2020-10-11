@@ -24,10 +24,13 @@ use std::{thread, time};
 
 use crate::config::{CLOCK_MULTIPLIER, DEFAULT_PARTS_PER_QUARTER};
 use crate::context::Context;
-use crate::midi::{start_midi_channel};
+use crate::midi::{start_midi_listener};
 use crate::models::{Controller};
 use crate::performance::{start_performance};
 use crate::log;
+
+
+// Time --------------------------------------------------------------------------------------------
 
 
 pub fn now_millis() -> u128 {
@@ -45,6 +48,8 @@ pub fn average(values: &[f64]) -> f64 {
     }
     avg / values.len() as f64
 }
+
+// Clock Multiplier --------------------------------------------------------------------------------
 
 pub fn start_clock_multiplier(
     clock_recv: Receiver<u64>,
@@ -94,6 +99,8 @@ pub fn start_clock_multiplier(
     });
 }
 
+// Main Controller ---------------------------------------------------------------------------------
+
 pub fn start_controller(context: &Context) {
     let debug = context.debug;
 
@@ -103,7 +110,7 @@ pub fn start_controller(context: &Context) {
     let (mult_clock_send, mult_clock_recv): (Sender<u64>, Receiver<u64>) = channel();
     let (ctrl_updated_send, ctrl_updated_recv): (Sender<Controller>, Receiver<Controller>) = channel();
 
-    let midi_recv = start_midi_channel();
+    let midi_recv = start_midi_listener();
 
     start_clock_multiplier(midi_clock_recv, midi_state_recv, mult_clock_send);
 

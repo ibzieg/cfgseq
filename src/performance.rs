@@ -24,9 +24,9 @@ use std::collections::HashMap;
 use portmidi::MidiMessage;
 
 use crate::context::Context;
-use crate::models::{Performance, Controller};
+use crate::models::{Performance, Controller, Instrument, Sequence};
 use crate::performance_file::{load_performance_file, start_file_watcher};
-use crate::sequence_player::{SequencePlayer, Instrument, Sequence};
+use crate::sequence_player::{SequencePlayer};
 
 
 pub fn start_performance(
@@ -57,7 +57,7 @@ pub fn start_performance(
         let mut clock_count = 0;
         let mut bar_count = 0;
 
-        let players: HashMap<String, SequencePlayer> = HashMap::new();
+        let mut players: HashMap<String, SequencePlayer> = HashMap::new();
 
         // initialize the PortMidi context.
         let context = portmidi::PortMidi::new().unwrap();
@@ -89,25 +89,22 @@ pub fn start_performance(
 
                 let scene_name = &perf.playlist[scene_index % perf.playlist.len()];
 
-                let found_scene = perf.find_scene(scene_name);
-                if found_scene.is_some() {
-                    let scene = found_scene.unwrap();
-                    for track in &scene.tracks {
-                        let found_inst = perf.find_instrument(&track.instrument);
-                        if found_inst.is_some() {
-                            let inst = found_inst.unwrap();
-                            // If the inst is the Master, and bar_count > track.play.len(), then advance the scene
-                            let seq_name = &track.play[bar_count % track.play.len()];
-                            let found_seq = inst.find_sequence(seq_name);
-                            if found_seq.is_some() {
-                                let seq = found_seq.unwrap();
-                                println!("{}:{}", &track.instrument, seq.name);
-                                // Set the player here, if it's not a follower
+                match perf.find_scene(scene_name) {
+                    Some(scene) => {
+                        for track in &scene.tracks {
+                            // TODO: If this track is a follower, do nothing
+                            match perf.find_instrument(&track.instrument) {
+                                Some(inst) => {
+                                    // TODO: If the inst is the Master, and bar_count > track.play.len(), then advance the scene
+                                    let seq_name = track.play[bar_count % track.play.len()].to_string();
+                                    players.insert(inst.name.to_string(), SequencePlayer::new(inst.clone(), seq_name));
+                                },
+                                None => println!("No instrument called '{}'", &track.instrument),
                             }
                         }
-                    }
+                    },
+                    None => println!("No scene called '{}'", scene_name),
                 }
-
 
             }
             let clock_msg = mult_clock_recv.try_recv();
@@ -115,6 +112,27 @@ pub fn start_performance(
                 clock_count += 1;
 
                 let mut messages: Vec<MidiMessage> = Vec::new();
+
+
+
+                let scene_name = &perf.playlist[scene_index % perf.playlist.len()];
+                match perf.find_scene(scene_name) {
+                    Some(scene) => {
+                        for track in &scene.tracks {
+                            match players.get_mut(&track.instrument) {
+                                Some(player) => {
+                                    messages.append(player.clock().as_mut());
+                                },
+                                None => {},
+                            }
+                        }
+                    },
+                    None => println!("No scene called '{}'", scene_name),
+                }
+
+
+
+
                 // messages.append(player1.clock().as_mut());
                 // If any tracks are follows of this one, then reset their Player
 

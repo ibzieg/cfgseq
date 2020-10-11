@@ -28,6 +28,8 @@ use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 
 use crate::models::Performance;
 
+// Performance File --------------------------------------------------------------------------------
+
 pub fn load_performance_file(file_path: &OsStr) -> Result<Performance, std::io::Error> {
     match fs::read_to_string(file_path) {
         Ok(yaml_text) => match serde_yaml::from_str::<Performance>(&yaml_text) {
