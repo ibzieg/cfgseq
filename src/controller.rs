@@ -24,14 +24,12 @@ use std::{thread, time};
 
 use crate::config::{CLOCK_MULTIPLIER, DEFAULT_PARTS_PER_QUARTER};
 use crate::context::Context;
-use crate::midi::{start_midi_listener};
-use crate::models::{Controller};
-use crate::performance::{start_performance};
 use crate::log;
-
+use crate::midi::start_midi_listener;
+use crate::models::Controller;
+use crate::performance::start_performance;
 
 // Time --------------------------------------------------------------------------------------------
-
 
 pub fn now_millis() -> u128 {
     let start = SystemTime::now();
@@ -108,17 +106,21 @@ pub fn start_controller(context: &Context) {
     let (midi_state_send, midi_state_recv): (Sender<bool>, Receiver<bool>) = channel();
     let (clock_reset_send, clock_reset_recv): (Sender<bool>, Receiver<bool>) = channel();
     let (mult_clock_send, mult_clock_recv): (Sender<u64>, Receiver<u64>) = channel();
-    let (ctrl_updated_send, ctrl_updated_recv): (Sender<Controller>, Receiver<Controller>) = channel();
+    let (ctrl_updated_send, ctrl_updated_recv): (Sender<Controller>, Receiver<Controller>) =
+        channel();
 
     let midi_recv = start_midi_listener();
 
     start_clock_multiplier(midi_clock_recv, midi_state_recv, mult_clock_send);
 
-    let mut ctrl_def: Controller = start_performance(context, clock_reset_recv, mult_clock_recv, ctrl_updated_send);
+    let mut ctrl_def: Controller = start_performance(
+        context,
+        clock_reset_recv,
+        mult_clock_recv,
+        ctrl_updated_send,
+    );
 
     thread::spawn(move || {
-
-
         let mut clock_count = 0;
         let mut beat_count = 0;
         let mut bar_count = 1;
@@ -134,7 +136,6 @@ pub fn start_controller(context: &Context) {
                 log::success("UPDATE".to_string(), now_millis() - clock_start_time);
                 ctrl_def = ctrl_updated_msg.unwrap();
             }
-
 
             let device_name = device.name().to_string();
             for event in events {
@@ -155,10 +156,10 @@ pub fn start_controller(context: &Context) {
                         let tick = now_millis();
                         let tick_elapsed = (tick - last_tick) as f64;
                         last_tick = tick;
-                        tick_duration_history[clock_count % tick_duration_history.len()] = tick_elapsed;
+                        tick_duration_history[clock_count % tick_duration_history.len()] =
+                            tick_elapsed;
 
                         let avg_dur_ms = average(&tick_duration_history);
-
 
                         if clock_count % ppq == 0 {
                             let ms_per_beat = avg_dur_ms * (ppq as f64);
@@ -177,15 +178,9 @@ pub fn start_controller(context: &Context) {
                             }
 
                             log::info(
-                                format!(
-                                    "[{:0>3}:{}]\tBPM={:.1}",
-                                    bar_count,
-                                    beat_count,
-                                    bpm,
-                                ),
+                                format!("[{:0>3}:{}]\tBPM={:.1}", bar_count, beat_count, bpm,),
                                 now_millis() - clock_start_time,
                             );
-
                         }
 
                         midi_clock_send

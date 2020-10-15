@@ -20,9 +20,10 @@ extern crate portmidi;
 
 use portmidi::MidiMessage;
 
-use crate::models::{Instrument, Sequence};
-use crate::config::{TICKS_PER_MEASURE, DEFAULT_VELOCITY};
+use crate::config::{DEFAULT_VELOCITY, TICKS_PER_MEASURE};
 use crate::midi;
+use crate::midi::DeviceManager;
+use crate::models::Instrument;
 
 // Sequence Player ---------------------------------------------------------------------------------
 
@@ -43,12 +44,13 @@ impl SequencePlayer {
         }
     }
 
+    #[allow(dead_code)]
     pub fn reset(&mut self) {
         self.step_index = 0;
         self.clock_count = 0;
     }
 
-    pub fn clock(&mut self) -> Vec<MidiMessage> {
+    pub fn clock(&mut self, device_manager: &mut DeviceManager) {
         // double the step length, so that we can note-off on odd steps
         let mut messages: Vec<MidiMessage> = Vec::new();
 
@@ -68,10 +70,42 @@ impl SequencePlayer {
                                 _ => {}
                             }
                             match &step.pitch {
-                                Some(ps) => for p in ps {
-                                    messages.push(midi::note_on(self.instrument.channel, *p, velocity));
-                                },
-                                None => {},
+                                Some(ps) => {
+                                    for p in ps {
+                                        messages.push(midi::note_on(
+                                            self.instrument.channel - 1,
+                                            *p,
+                                            velocity,
+                                        ));
+                                    }
+                                }
+                                None => {}
+                            }
+                            match &step.data {
+                                Some(values) => {
+                                    for i in 0..values.len() {
+                                        let value = values[i];
+
+                                        match &self.instrument.data {
+                                            Some(mod_devices) => {
+                                                if i < mod_devices.len() {
+                                                    let device = &mod_devices[i];
+                                                    let message = midi::control_change(
+                                                        device.channel - 1,
+                                                        device.control,
+                                                        value,
+                                                    );
+                                                    device_manager.write_messages(
+                                                        device.device.to_string(),
+                                                        vec![message],
+                                                    );
+                                                }
+                                            }
+                                            None => {}
+                                        }
+                                    }
+                                }
+                                None => {}
                             }
                         }
                     } else {
@@ -80,21 +114,29 @@ impl SequencePlayer {
                             let step = maybe_step.as_ref().unwrap().clone();
                             let velocity = 0;
                             match &step.pitch {
-                                Some(ps) => for p in ps {
-                                    messages.push(midi::note_on(self.instrument.channel, *p, velocity));
-                                },
-                                None => {},
+                                Some(ps) => {
+                                    for p in ps {
+                                        messages.push(midi::note_off(
+                                            self.instrument.channel - 1,
+                                            *p,
+                                            velocity,
+                                        ));
+                                    }
+                                }
+                                None => {}
                             }
                         }
                     }
                     self.step_index += 1;
                 }
-            },
-            None => {},
+            }
+            None => {}
         }
 
         self.clock_count += 1;
 
-        messages
+        if messages.len() > 0 {
+            device_manager.write_messages(self.instrument.device.to_string(), messages);
+        }
     }
 }

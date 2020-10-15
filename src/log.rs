@@ -17,7 +17,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 use ansi_term::{Color, Style};
-use chrono::{Duration};
+use chrono::Duration;
 
 pub fn format_duration(dur: Duration) -> String {
     let mut t = dur.num_milliseconds();
@@ -32,10 +32,7 @@ pub fn format_duration(dur: Duration) -> String {
 
     let ms = (t - (sec * 1000)) % 1000;
 
-    format!(
-        "{:0>2}:{:0>2}:{:0>2}.{:0<3.3}",
-        hr, min, sec, ms,
-    )
+    format!("{:0>2}:{:0>2}:{:0>2}.{:0<3.3}", hr, min, sec, ms,)
 }
 
 pub fn print_timestamp(timestamp: u128) {
@@ -43,7 +40,9 @@ pub fn print_timestamp(timestamp: u128) {
 
     print!(
         "{}",
-        Style::new().bold().paint(format!("[{}]\t", format_duration(dur)))
+        Style::new()
+            .bold()
+            .paint(format!("[{}]\t", format_duration(dur)))
     );
 }
 
@@ -59,4 +58,3 @@ pub fn event(text: String, timestamp: u128) {
 pub fn success(text: String, timestamp: u128) {
     info(Color::Green.paint(text).to_string(), timestamp);
 }
-

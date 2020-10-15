@@ -18,12 +18,62 @@
  */
 extern crate portmidi;
 
+use portmidi::PortMidi;
+use portmidi::{Direction, MidiMessage};
 use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
-use portmidi::MidiMessage;
+
+// -------------------------------------------------------------------------------------------------
 
 const MIDI_BUFFER_SIZE: usize = 1024;
+
+// -------------------------------------------------------------------------------------------------
+
+pub struct DeviceManager {
+    context: PortMidi,
+}
+
+impl DeviceManager {
+    pub fn new() -> DeviceManager {
+        DeviceManager {
+            context: PortMidi::new().unwrap(),
+        }
+    }
+
+    pub fn write_messages(&mut self, device_name: String, messages: Vec<MidiMessage>) {
+        match self.context.devices() {
+            Ok(devices) => {
+                for device_info in devices.into_iter().collect::<Vec<_>>() {
+                    if device_info.direction() == Direction::Output
+                        && device_info.name() == &device_name
+                    {
+                        match self.context.device(device_info.id()) {
+                            Ok(dev) => match self.context.output_port(dev, 1024) {
+                                Ok(mut output_port) => {
+                                    for message in &messages {
+                                        output_port
+                                            .write_message(*message)
+                                            .expect("midi write_message failed");
+                                    }
+                                }
+                                Err(e) => {
+                                    println!("Failed to open MIDI output port: {}", e);
+                                }
+                            },
+                            Err(e) => {
+                                println!("Failed to open MIDI device: {}", e);
+                            }
+                        }
+                    }
+                }
+            }
+            Err(e) => {
+                println!("Failed to get MIDI devices: {}", e);
+            }
+        }
+    }
+}
 
 // MIDI Devices ------------------------------------------------------------------------------------
 
@@ -42,7 +92,7 @@ pub fn list_midi_devices() {
 
 pub fn start_midi_listener(
 ) -> mpsc::Receiver<(portmidi::DeviceInfo, std::vec::Vec<portmidi::MidiEvent>)> {
-    let midi_read_wait = Duration::from_millis(10);
+    let midi_read_wait = Duration::from_micros(500);
     let context = portmidi::PortMidi::new().unwrap();
     let (tx, rx) = mpsc::channel();
     thread::spawn(move || {
@@ -79,6 +129,15 @@ pub fn parse_channel(status_bytes: u8) -> u8 {
 #[allow(dead_code)]
 pub fn parse_status(status_bytes: u8) -> u8 {
     status_bytes & 0b011110000
+}
+
+pub fn control_change(channel: u8, control: u8, value: u8) -> MidiMessage {
+    MidiMessage {
+        status: 0xB0 + channel,
+        data1: control,
+        data2: value,
+        data3: 0,
+    }
 }
 
 pub fn note_on(channel: u8, pitch: u8, velocity: u8) -> MidiMessage {

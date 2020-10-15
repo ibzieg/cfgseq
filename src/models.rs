@@ -19,8 +19,6 @@
 use serde::{Deserialize, Serialize};
 
 use crate::config::{DEFAULT_MIDI_CHANNEL, DEFAULT_PARTS_PER_QUARTER};
-use serde::de::Unexpected::Seq;
-
 
 // Controller --------------------------------------------------------------------------------------
 
@@ -120,6 +118,7 @@ pub struct Sequence {
 }
 
 impl Sequence {
+    #[allow(dead_code)]
     pub fn new() -> Sequence {
         Sequence {
             name: String::new(),
@@ -142,7 +141,7 @@ impl Clone for Sequence {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ModDevice {
     pub device: String,
-    pub channel: u32,
+    pub channel: u8,
     pub control: u8,
 }
 
@@ -168,6 +167,7 @@ pub struct Instrument {
 }
 
 impl Instrument {
+    #[allow(dead_code)]
     pub fn new() -> Instrument {
         Instrument {
             name: String::new(),
@@ -193,7 +193,7 @@ impl Clone for Instrument {
     fn clone(&self) -> Instrument {
         Instrument {
             name: self.name.to_string(),
-            device: self.name.to_string(),
+            device: self.device.to_string(),
             channel: self.channel.to_owned(),
             data: match &self.data {
                 Some(d) => Some(d.to_vec()),

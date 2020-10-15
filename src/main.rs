@@ -36,7 +36,6 @@ mod models;
 mod performance;
 mod performance_file;
 mod sequence_player;
-mod types;
 
 // Options -----------------------------------------------------------------------------------------
 

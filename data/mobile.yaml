@@ -1,0 +1,211 @@
+controller:
+  device: "IAC Driver Bus 1"
+  channel: 7
+  ppq: 24
+
+
+playlist:
+  - intro
+  - intro
+  - intro
+  - intro
+
+scenes:
+  - name: intro
+    master: inst1
+    tracks:
+      - instrument: inst1
+        play: [ F0, F1, F2, F3, F4, F3, F2, F1 ]
+
+
+instruments:
+  - name: inst1
+    device: "IAC Driver Bus 1"
+    channel: 1
+    data:
+      - device: "IAC Driver Bus 1"
+        channel: 1
+        control: 10
+      - device: "IAC Driver Bus 1"
+        channel: 1
+        control: 11
+    sequences:
+      - name: A
+        steps:
+          - { pitch: [ 36 ], velocity: 118, data: [ 120, 70 ] }
+          - null
+          - null
+          - null
+
+          - { pitch: [ 36 ], velocity: 93, data: [ 60, 68 ] }
+          - null
+          - null
+          - null
+
+          - { pitch: [ 36 ], velocity: 60, data: [ 67, 38 ] }
+          - null
+          - null
+          - null
+
+          - { pitch: [ 36 ], velocity: 60, data: [ 30, 108 ] }
+          - null
+          - null
+          - null
+      - name: D
+        steps:
+          - { pitch: [ 55 ], velocity: 53, data: [ 120, 70 ] }
+          - null
+          - { pitch: [ 53 ], velocity: 62, data: [ 87, 32 ] }
+          - null
+          - { pitch: [ 50 ], velocity: 46, data: [ 72, 15 ] }
+          - null
+          - { pitch: [ 46 ], velocity: 67, data: [ 52, 111 ] }
+          - null
+          - { pitch: [ 31 ], velocity: 46, data: [ 30, 65 ] }
+          - null
+          - { pitch: [ 34 ], velocity: 50, data: [ 114, 98 ] }
+          - null
+          - { pitch: [ 38 ], velocity: 53, data: [ 67, 123 ] }
+          - null
+          - { pitch: [ 41 ], velocity: 43, data: [ 117, 22 ] }
+          - null
+      - name: F0
+        steps:
+          - { pitch: [ 55 ], velocity: 53, data: [ 120, 70 ] }
+          - null
+          - { pitch: [ 53 ], velocity: 62, data: [ 87, 32 ] }
+          - null
+      - name: F1
+        steps:
+          - { pitch: [ 31 ], velocity: 46, data: [ 30, 65 ] }
+          - null
+          - { pitch: [ 34 ], velocity: 50, data: [ 114, 98 ] }
+          - null
+          - { pitch: [ 38 ], velocity: 53, data: [ 67, 123 ] }
+          - null
+          - { pitch: [ 41 ], velocity: 43, data: [ 117, 22 ] }
+          - null
+      - name: F2
+        steps:
+          - { pitch: [ 55 ], velocity: 53, data: [ 120, 70 ] }
+          - null
+          - { pitch: [ 53 ], velocity: 62, data: [ 87, 32 ] }
+          - null
+          - { pitch: [ 31 ], velocity: 46, data: [ 30, 65 ] }
+          - null
+          - { pitch: [ 34 ], velocity: 50, data: [ 114, 98 ] }
+          - null
+          - { pitch: [ 38 ], velocity: 53, data: [ 67, 123 ] }
+          - null
+          - { pitch: [ 41 ], velocity: 43, data: [ 117, 22 ] }
+          - null
+      - name: F3
+        steps:
+          - { pitch: [ 31 ], velocity: 46, data: [ 30, 65 ] }
+          - null
+          - { pitch: [ 34 ], velocity: 50, data: [ 114, 98 ] }
+          - null
+          - { pitch: [ 38 ], velocity: 53, data: [ 67, 123 ] }
+          - null
+          - { pitch: [ 41 ], velocity: 43, data: [ 117, 22 ] }
+          - null
+          - { pitch: [ 55 ], velocity: 53, data: [ 120, 70 ] }
+          - null
+          - { pitch: [ 53 ], velocity: 62, data: [ 87, 32 ] }
+          - null
+          - { pitch: [ 31 ], velocity: 46, data: [ 30, 65 ] }
+          - null
+          - { pitch: [ 34 ], velocity: 50, data: [ 114, 98 ] }
+          - null
+          - { pitch: [ 38 ], velocity: 53, data: [ 67, 123 ] }
+          - null
+          - { pitch: [ 41 ], velocity: 43, data: [ 117, 22 ] }
+          - null
+      - name: F4
+        steps:
+          - { pitch: [ 55 ], velocity: 53, data: [ 120, 70 ] }
+          - null
+          - { pitch: [ 53 ], velocity: 62, data: [ 87, 32 ] }
+          - null
+          - { pitch: [ 31 ], velocity: 46, data: [ 30, 65 ] }
+          - null
+          - { pitch: [ 34 ], velocity: 50, data: [ 114, 98 ] }
+          - null
+          - { pitch: [ 38 ], velocity: 53, data: [ 67, 123 ] }
+          - null
+          - { pitch: [ 41 ], velocity: 43, data: [ 117, 22 ] }
+          - null
+          - { pitch: [ 31 ], velocity: 46, data: [ 30, 65 ] }
+          - null
+          - { pitch: [ 34 ], velocity: 50, data: [ 114, 98 ] }
+          - null
+          - { pitch: [ 38 ], velocity: 53, data: [ 67, 123 ] }
+          - null
+          - { pitch: [ 41 ], velocity: 43, data: [ 117, 22 ] }
+          - null
+          - { pitch: [ 55 ], velocity: 53, data: [ 120, 70 ] }
+          - null
+          - { pitch: [ 53 ], velocity: 62, data: [ 87, 32 ] }
+          - null
+          - { pitch: [ 31 ], velocity: 46, data: [ 30, 65 ] }
+          - null
+          - { pitch: [ 34 ], velocity: 50, data: [ 114, 98 ] }
+          - null
+          - { pitch: [ 38 ], velocity: 53, data: [ 67, 123 ] }
+          - null
+          - { pitch: [ 41 ], velocity: 43, data: [ 117, 22 ] }
+          - null
+      - name: F5
+        steps:
+          - { pitch: [ 31 ], velocity: 46, data: [ 30, 65 ] }
+          - null
+          - { pitch: [ 34 ], velocity: 50, data: [ 114, 98 ] }
+          - null
+          - { pitch: [ 38 ], velocity: 53, data: [ 67, 123 ] }
+          - null
+          - { pitch: [ 41 ], velocity: 43, data: [ 117, 22 ] }
+          - null
+          - { pitch: [ 55 ], velocity: 53, data: [ 120, 70 ] }
+          - null
+          - { pitch: [ 53 ], velocity: 62, data: [ 87, 32 ] }
+          - null
+          - { pitch: [ 31 ], velocity: 46, data: [ 30, 65 ] }
+          - null
+          - { pitch: [ 34 ], velocity: 50, data: [ 114, 98 ] }
+          - null
+          - { pitch: [ 38 ], velocity: 53, data: [ 67, 123 ] }
+          - null
+          - { pitch: [ 41 ], velocity: 43, data: [ 117, 22 ] }
+          - null
+          - { pitch: [ 55 ], velocity: 53, data: [ 120, 70 ] }
+          - null
+          - { pitch: [ 53 ], velocity: 62, data: [ 87, 32 ] }
+          - null
+          - { pitch: [ 31 ], velocity: 46, data: [ 30, 65 ] }
+          - null
+          - { pitch: [ 34 ], velocity: 50, data: [ 114, 98 ] }
+          - null
+          - { pitch: [ 38 ], velocity: 53, data: [ 67, 123 ] }
+          - null
+          - { pitch: [ 41 ], velocity: 43, data: [ 117, 22 ] }
+          - null
+          - { pitch: [ 31 ], velocity: 46, data: [ 30, 65 ] }
+          - null
+          - { pitch: [ 34 ], velocity: 50, data: [ 114, 98 ] }
+          - null
+          - { pitch: [ 38 ], velocity: 53, data: [ 67, 123 ] }
+          - null
+          - { pitch: [ 41 ], velocity: 43, data: [ 117, 22 ] }
+          - null
+          - { pitch: [ 55 ], velocity: 53, data: [ 120, 70 ] }
+          - null
+          - { pitch: [ 53 ], velocity: 62, data: [ 87, 32 ] }
+          - null
+          - { pitch: [ 31 ], velocity: 46, data: [ 30, 65 ] }
+          - null
+          - { pitch: [ 34 ], velocity: 50, data: [ 114, 98 ] }
+          - null
+          - { pitch: [ 38 ], velocity: 53, data: [ 67, 123 ] }
+          - null
+          - { pitch: [ 41 ], velocity: 43, data: [ 117, 22 ] }
+          - null
