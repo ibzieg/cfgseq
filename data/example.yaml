@@ -1,5 +1,5 @@
 controller:
-  # device: "IAC Driver Bus 1"
+#  device: "IAC Driver Bus 1"
   device: "828x MIDI Port"
   channel: 7
   ppq: 24
@@ -15,12 +15,12 @@ scenes:
   - name: intro
     master: inst1
     tracks:
-      - instrument: inst1
+      - instrument: drum1
         play: [ A ]
 
       - instrument: inst2
+        follow: drum1
         play: [ D4 ]
-      #        play: [A, C, A, B]
 
       - instrument: drum2
         play: [ half ]
@@ -32,7 +32,7 @@ scenes:
         play: [ A, _ ]
 
 instruments:
-  - name: inst1
+  - name: drum1
     device: "828x MIDI Port"
     channel: 14
     data:

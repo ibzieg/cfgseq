@@ -32,6 +32,8 @@ pub struct SequencePlayer {
     pub seq_name: String,
     step_index: usize,
     clock_count: usize,
+    pub bar_count: usize,
+    note_on_list: Vec<u8>,
 }
 
 impl SequencePlayer {
@@ -41,6 +43,8 @@ impl SequencePlayer {
             seq_name: seq_name,
             step_index: 0,
             clock_count: 0,
+            bar_count: 0,
+            note_on_list: Vec::new(),
         }
     }
 
@@ -48,11 +52,35 @@ impl SequencePlayer {
     pub fn reset(&mut self) {
         self.step_index = 0;
         self.clock_count = 0;
+        self.bar_count = 0;
     }
 
-    pub fn clock(&mut self, device_manager: &mut DeviceManager) {
+    pub fn next_bar(&mut self, device_manager: &mut DeviceManager) {
+        self.step_index = 0;
+        self.clock_count = 0;
+        self.bar_count += 1;
+        self.note_off_all(device_manager);
+    }
+
+    pub fn note_off_all(&mut self, device_manager: &mut DeviceManager) {
+        let mut messages: Vec<MidiMessage> = Vec::new();
+        for note in &self.note_on_list {
+            messages.push(midi::note_off(
+                self.instrument.channel - 1,
+                *note,
+                0,
+            ));
+        }
+        if messages.len() > 0 {
+            device_manager.write_messages(self.instrument.device.to_string(), messages);
+        }
+    }
+
+    pub fn clock(&mut self, device_manager: &mut DeviceManager) -> bool {
         // double the step length, so that we can note-off on odd steps
         let mut messages: Vec<MidiMessage> = Vec::new();
+
+        let mut note_on_was_triggered = false;
 
         match self.instrument.find_sequence(&self.seq_name) {
             Some(sequence) => {
@@ -77,6 +105,8 @@ impl SequencePlayer {
                                             *p,
                                             velocity,
                                         ));
+                                        note_on_was_triggered = true;
+                                        self.note_on_list.push(*p);
                                     }
                                 }
                                 None => {}
@@ -138,5 +168,7 @@ impl SequencePlayer {
         if messages.len() > 0 {
             device_manager.write_messages(self.instrument.device.to_string(), messages);
         }
+
+        note_on_was_triggered
     }
 }

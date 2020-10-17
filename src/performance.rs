@@ -56,6 +56,7 @@ pub fn start_performance(
         let mut players: HashMap<String, SequencePlayer> = HashMap::new();
         let mut device_manager = DeviceManager::new();
 
+
         loop {
             let perf_update = perf_update_recv.try_recv();
             if perf_update.is_ok() {
@@ -78,18 +79,19 @@ pub fn start_performance(
                 match perf.find_scene(scene_name) {
                     Some(scene) => {
                         for track in &scene.tracks {
-                            // TODO: If this track is a follower, do nothing
-                            match perf.find_instrument(&track.instrument) {
-                                Some(inst) => {
-                                    // TODO: If the inst is the Master, and bar_count > track.play.len(), then advance the scene
-                                    let seq_name =
-                                        track.play[bar_count % track.play.len()].to_string();
-                                    players.insert(
-                                        inst.name.to_string(),
-                                        SequencePlayer::new(inst.clone(), seq_name),
-                                    );
+                            if track.follow.is_none() || bar_count == 0 {
+                                match perf.find_instrument(&track.instrument) {
+                                    Some(inst) => {
+                                        // TODO: If the inst is the Master, and bar_count > track.play.len(), then advance the scene
+                                        let seq_name =
+                                            track.play[bar_count % track.play.len()].to_string();
+                                        players.insert(
+                                            inst.name.to_string(),
+                                            SequencePlayer::new(inst.clone(), seq_name),
+                                        );
+                                    }
+                                    None => println!("No instrument called '{}'", &track.instrument),
                                 }
-                                None => println!("No instrument called '{}'", &track.instrument),
                             }
                         }
                     }
@@ -103,11 +105,36 @@ pub fn start_performance(
                 match perf.find_scene(scene_name) {
                     Some(scene) => {
                         for track in &scene.tracks {
-                            match players.get_mut(&track.instrument) {
-                                Some(player) => {
-                                    player.clock(&mut device_manager);
+                            if track.follow.is_none() {
+                                match players.get_mut(&track.instrument) {
+                                    Some(player) => {
+                                        let note_was_played = player.clock(&mut device_manager);
+                                        for follower_track in &scene.tracks {
+                                            match &follower_track.follow {
+                                                Some(follow_name) => {
+                                                    if follow_name == &track.instrument {
+                                                        match players.get_mut(&follower_track.instrument) {
+                                                            Some(follower_player) => {
+                                                                if note_was_played {
+                                                                    follower_player.next_bar(&mut device_manager);
+                                                                    follower_player.seq_name =
+                                                                        follower_track.play[follower_player.bar_count % follower_track.play.len()].to_string();
+                                                                }
+                                                                follower_player.clock(&mut device_manager);
+
+                                                            }
+                                                            _ => {}
+                                                        }
+                                                    }
+                                                },
+                                                _ => {},
+                                            }
+
+
+                                        }
+                                    }
+                                    None => {}
                                 }
-                                None => {}
                             }
                         }
                     }
