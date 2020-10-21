@@ -20,6 +20,7 @@ use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
+use std::time::Duration;
 
 use crate::context::Context;
 use crate::midi::DeviceManager;
@@ -33,13 +34,9 @@ pub fn start_performance(
     mult_clock_recv: Receiver<u64>,
     ctrl_updated: Sender<Controller>,
 ) -> Controller {
-    let mut perf: Performance = Performance::new();
-    match load_performance_file(OsStr::new(&context.performance.to_owned())) {
-        Ok(initial_perf) => perf = initial_perf,
-        Err(e) => {
-            println!("Failed to load file: {}", e);
-        }
-    }
+    let mut perf =
+        load_performance_file(OsStr::new(&context.performance.to_owned()))
+            .expect("Failed to load file");
 
     let ctrl: Controller = perf.controller.clone();
 
@@ -49,100 +46,126 @@ pub fn start_performance(
     start_file_watcher(&context.performance.to_owned(), perf_update_send);
 
     thread::spawn(move || {
-        let mut scene_index = 0;
-        let mut clock_count = 0;
-        let mut bar_count = 0;
+        let mut perf_ctrl = PerformanceController::new(perf);
 
-        let mut players: HashMap<String, SequencePlayer> = HashMap::new();
-        let mut device_manager = DeviceManager::new();
-
+        let wait_dur = Duration::from_micros(50);
 
         loop {
             let perf_update = perf_update_recv.try_recv();
             if perf_update.is_ok() {
                 perf = perf_update.unwrap();
                 ctrl_updated.send(perf.controller.clone()).unwrap();
+                perf_ctrl.update_def(perf);
             }
             let reset_msg = clock_reset_recv.try_recv();
             if reset_msg.is_ok() {
-                // Advance the players
-                if clock_count == 0 {
-                    scene_index = 0;
-                    bar_count = 0;
-                } else {
-                    bar_count += 1;
-                }
-                clock_count = 0;
-
-                let scene_name = &perf.playlist[scene_index % perf.playlist.len()];
-
-                match perf.find_scene(scene_name) {
-                    Some(scene) => {
-                        for track in &scene.tracks {
-                            if track.follow.is_none() || bar_count == 0 {
-                                match perf.find_instrument(&track.instrument) {
-                                    Some(inst) => {
-                                        // TODO: If the inst is the Master, and bar_count > track.play.len(), then advance the scene
-                                        let seq_name =
-                                            track.play[bar_count % track.play.len()].to_string();
-                                        players.insert(
-                                            inst.name.to_string(),
-                                            SequencePlayer::new(inst.clone(), seq_name),
-                                        );
-                                    }
-                                    None => println!("No instrument called '{}'", &track.instrument),
-                                }
-                            }
-                        }
-                    }
-                    None => println!("No scene called '{}'", scene_name),
-                }
+                perf_ctrl.reset();
             }
             let clock_msg = mult_clock_recv.try_recv();
             if clock_msg.is_ok() {
-                clock_count += 1;
-                let scene_name = &perf.playlist[scene_index % perf.playlist.len()];
-                match perf.find_scene(scene_name) {
-                    Some(scene) => {
-                        for track in &scene.tracks {
-                            if track.follow.is_none() {
-                                match players.get_mut(&track.instrument) {
-                                    Some(player) => {
-                                        let note_was_played = player.clock(&mut device_manager);
-                                        for follower_track in &scene.tracks {
-                                            match &follower_track.follow {
-                                                Some(follow_name) => {
-                                                    if follow_name == &track.instrument {
-                                                        match players.get_mut(&follower_track.instrument) {
-                                                            Some(follower_player) => {
-                                                                if note_was_played {
-                                                                    follower_player.next_bar(&mut device_manager);
-                                                                    follower_player.seq_name =
-                                                                        follower_track.play[follower_player.bar_count % follower_track.play.len()].to_string();
-                                                                }
-                                                                follower_player.clock(&mut device_manager);
-
-                                                            }
-                                                            _ => {}
-                                                        }
-                                                    }
-                                                },
-                                                _ => {},
-                                            }
-
-
-                                        }
-                                    }
-                                    None => {}
-                                }
-                            }
-                        }
-                    }
-                    None => println!("No scene called '{}'", scene_name),
-                }
+                perf_ctrl.clock();
             }
+            thread::sleep(wait_dur);
         }
     });
 
     ctrl
+}
+
+// PerformanceController ---------------------------------------------------------------------------
+
+struct PerformanceController {
+    scene_index: usize,
+    clock_count: usize,
+    bar_count: usize,
+    players: HashMap<String, SequencePlayer>,
+    perf: Performance,
+    device_manager: DeviceManager
+}
+
+impl PerformanceController {
+    pub fn new(perf: Performance) -> PerformanceController {
+        PerformanceController {
+            scene_index: 0,
+            clock_count: 0,
+            bar_count: 0,
+            players: HashMap::new(),
+            perf,
+            device_manager: DeviceManager::new()
+        }
+    }
+
+    pub fn update_def(&mut self, def: Performance) {
+        self.perf = def;
+    }
+
+    pub fn reset(&mut self) {
+        // Advance the players
+        if self.clock_count == 0 {
+            self.scene_index = 0;
+            self.bar_count = 0;
+        } else {
+            self.bar_count += 1;
+        }
+        self.clock_count = 0;
+
+        let scene_name = &self.perf.playlist[self.scene_index % self.perf.playlist.len()];
+
+        match self.perf.find_scene(scene_name) {
+            Some(scene) => {
+                for track in &scene.tracks {
+                    if track.follow.is_none() || self.bar_count == 0 {
+                        match self.perf.find_instrument(&track.instrument) {
+                            Some(inst) => {
+                                // TODO: If the inst is the Master, and bar_count > track.play.len(), then advance the scene
+                                let seq_name =
+                                    track.play[self.bar_count % track.play.len()].to_string();
+                                self.players.insert(
+                                    inst.name.to_string(),
+                                    SequencePlayer::new(inst.clone(), seq_name)
+                                );
+                            }
+                            None => println!("No instrument called '{}'", &track.instrument),
+                        }
+                    }
+                }
+            }
+            None => println!("No scene called '{}'", scene_name),
+        }
+    }
+
+    pub fn clock(&mut self) {
+        self.clock_count += 1;
+        let playlist_index = self.scene_index % self.perf.playlist.len();
+
+        let scene_name = &self.perf.playlist[playlist_index].to_string();
+
+        let scenes = self.perf.scenes.to_vec();
+
+        let mut device_manager = &mut self.device_manager;
+
+        for scene in scenes.iter().filter(|s| &s.name == scene_name) {
+            let mut note_played: HashMap<String, bool> = HashMap::new();
+            // First clock all the non-followers
+            for track in scene.tracks.iter().filter(|t| t.follow.is_none()) {
+                self.players.get_mut(&track.instrument).map(|player| {
+                    note_played.insert(track.instrument.to_string(), player.clock(&mut device_manager));
+                });
+            }
+            // Then clock all the followers
+            for track in scene.tracks.iter().filter(|t| t.follow.is_some()) {
+                self.players.get_mut(&track.instrument).map(|player| {
+                    let follow_name = track.follow.as_ref().unwrap_or(&String::from("")).to_string();
+                    let note_was_played = note_played.get(&follow_name).unwrap_or(&false);
+                    if *note_was_played {
+                        player.next_bar(&mut device_manager);
+                        player.seq_name =
+                            track.play[player.bar_count  % track.play.len()].to_string();
+                    }
+                    player.clock(&mut device_manager);
+                });
+            }
+        }
+
+    }
 }

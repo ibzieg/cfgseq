@@ -74,6 +74,7 @@ impl SequencePlayer {
         if messages.len() > 0 {
             device_manager.write_messages(self.instrument.device.to_string(), messages);
         }
+        self.note_on_list.clear();
     }
 
     pub fn clock(&mut self, device_manager: &mut DeviceManager) -> bool {
@@ -139,23 +140,7 @@ impl SequencePlayer {
                             }
                         }
                     } else {
-                        let maybe_step = &sequence.steps[(self.step_index - 1) / 2];
-                        if maybe_step.is_some() {
-                            let step = maybe_step.as_ref().unwrap().clone();
-                            let velocity = 0;
-                            match &step.pitch {
-                                Some(ps) => {
-                                    for p in ps {
-                                        messages.push(midi::note_off(
-                                            self.instrument.channel - 1,
-                                            *p,
-                                            velocity,
-                                        ));
-                                    }
-                                }
-                                None => {}
-                            }
-                        }
+                        self.note_off_all(device_manager);
                     }
                     self.step_index += 1;
                 }

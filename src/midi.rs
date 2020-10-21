@@ -52,6 +52,7 @@ impl DeviceManager {
                             Ok(dev) => match self.context.output_port(dev, 1024) {
                                 Ok(mut output_port) => {
                                     for message in &messages {
+                                        // println!("{:?}", message);
                                         output_port
                                             .write_message(*message)
                                             .expect("midi write_message failed");
@@ -92,7 +93,7 @@ pub fn list_midi_devices() {
 
 pub fn start_midi_listener(
 ) -> mpsc::Receiver<(portmidi::DeviceInfo, std::vec::Vec<portmidi::MidiEvent>)> {
-    let midi_read_wait = Duration::from_micros(500);
+    let midi_read_wait = Duration::from_micros(50);
     let context = portmidi::PortMidi::new().unwrap();
     let (tx, rx) = mpsc::channel();
     thread::spawn(move || {

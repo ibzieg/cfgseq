@@ -15,16 +15,17 @@ scenes:
     master: inst1
     tracks:
       - instrument: inst1
-        play: [ B ]
+        play: [ A ]
 
       - instrument: drum2
-        follow: inst1
+        # follow: inst1
         play: [ T0, T1 ]
 
 instruments:
   - name: inst1
+    # device: "USB Uno MIDI Interface"
     device: "828x MIDI Port"
-    channel: 1
+    channel: 14
     sequences:
       - name: A
         steps:
@@ -55,14 +56,15 @@ instruments:
           - null
 
   - name: drum2
+    # device: "USB Uno MIDI Interface"
     device: "828x MIDI Port"
-    channel: 1
+    channel: 14
     sequences:
       - name: T0
         steps:
           - null
-          - { pitch: [38] }
           - { pitch: [39] }
+          - { pitch: [42] }
           - null
 
           - null
@@ -83,8 +85,8 @@ instruments:
       - name: T1
         steps:
           - null
-          - { pitch: [41] }
           - { pitch: [42] }
+          - { pitch: [39] }
           - null
           - null
           - null
