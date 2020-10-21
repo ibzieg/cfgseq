@@ -172,9 +172,9 @@ pub fn start_controller(context: &Context) {
                                 beat_count = 1;
                                 bar_count += 1;
 
-                                clock_reset_send
-                                    .send(true)
-                                    .expect("clock_reset_send_failed");
+                                // clock_reset_send
+                                //     .send(true)
+                                //     .expect("clock_reset_send_failed");
                             }
 
                             log::info(
@@ -196,9 +196,9 @@ pub fn start_controller(context: &Context) {
                         last_tick = now_millis();
                         clock_start_time = now_millis();
                         log::event("START".to_string(), now_millis() - clock_start_time);
-                    // clock_reset_send
-                    //     .send(true)
-                    //     .expect("clock_reset_send failed");
+                        clock_reset_send
+                            .send(true)
+                            .expect("clock_reset_send failed");
                     } else if message.status == 252 {
                         // Stop
                         clock_start_time = now_millis();
