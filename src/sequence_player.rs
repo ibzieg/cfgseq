@@ -65,11 +65,7 @@ impl SequencePlayer {
     pub fn note_off_all(&mut self, device_manager: &mut DeviceManager) {
         let mut messages: Vec<MidiMessage> = Vec::new();
         for note in &self.note_on_list {
-            messages.push(midi::note_off(
-                self.instrument.channel - 1,
-                *note,
-                0,
-            ));
+            messages.push(midi::note_off(self.instrument.channel - 1, *note, 0));
         }
         if messages.len() > 0 {
             device_manager.write_messages(self.instrument.device.to_string(), messages);

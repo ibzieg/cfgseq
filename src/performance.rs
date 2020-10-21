@@ -27,6 +27,7 @@ use crate::midi::DeviceManager;
 use crate::models::{Controller, Performance};
 use crate::performance_file::{load_performance_file, start_file_watcher};
 use crate::sequence_player::SequencePlayer;
+use crate::config::TICKS_PER_MEASURE;
 
 pub fn start_performance(
     context: &Context,
@@ -85,52 +86,74 @@ struct PerformanceController {
 
 impl PerformanceController {
     pub fn new(perf: Performance) -> PerformanceController {
-        PerformanceController {
+        let mut perf_ctrl = PerformanceController {
             scene_index: 0,
             clock_count: 0,
             bar_count: 0,
             players: HashMap::new(),
             perf,
             device_manager: DeviceManager::new()
-        }
+        };
+        perf_ctrl.reset();
+        perf_ctrl
     }
 
     pub fn update_def(&mut self, def: Performance) {
         self.perf = def;
+        self.init_scene();
     }
 
     pub fn reset(&mut self) {
-        // Advance the players
-        if self.clock_count == 0 {
-            self.scene_index = 0;
-            self.bar_count = 0;
-        } else {
-            self.bar_count += 1;
-        }
-        self.clock_count = 0;
+        self.scene_index = 0;
+        self.bar_count = 0;
+        self.init_scene();
+    }
 
+    pub fn init_scene(&mut self) {
         let playlist_index = self.scene_index % self.perf.playlist.len();
         let scene_name = &self.perf.playlist[playlist_index].to_string();
 
         for scene in self.perf.scenes.iter().filter(|s| &s.name == scene_name) {
             for track in &scene.tracks {
-                if track.follow.is_none() || self.bar_count == 0 {
-                    for inst in self.perf.instruments.iter().filter(|i| &i.name == &track.instrument) {
-                        // TODO: If the inst is the Master, and bar_count > track.play.len(), then advance the scene
-                        let seq_name =
-                            track.play[self.bar_count % track.play.len()].to_string();
-                        self.players.insert(
-                            inst.name.to_string(),
-                            SequencePlayer::new(inst.clone(), seq_name)
-                        );
-                    }
+                for inst in self.perf.instruments.iter().filter(|i| &i.name == &track.instrument) {
+                    let seq_name =
+                        track.play[self.bar_count % track.play.len()].to_string();
+                    self.players.insert(
+                        inst.name.to_string(),
+                        SequencePlayer::new(inst.clone(), seq_name)
+                    );
                 }
+            }
+        }
+    }
+
+    pub fn next_bar(&mut self) {
+        self.bar_count += 1;
+
+        let playlist_index = self.scene_index % self.perf.playlist.len();
+        let scene_name = &self.perf.playlist[playlist_index].to_string();
+
+        let bar_count = self.bar_count.to_owned();
+
+        // Advance non-follower sequence players
+        for scene in self.perf.scenes.iter().filter(|s| &s.name == scene_name) {
+            for track in scene.tracks.iter().filter(|t| t.follow.is_none()) {
+                self.players.get_mut(&track.instrument).map(|player| {
+                    player.reset();
+                    player.seq_name =
+                        track.play[bar_count  % track.play.len()].to_string();
+
+                });
             }
         }
     }
 
     pub fn clock(&mut self) {
         self.clock_count += 1;
+
+        if self.clock_count > 0 && self.clock_count % TICKS_PER_MEASURE as usize == 0 {
+            self.next_bar();
+        }
 
         let playlist_index = self.scene_index % self.perf.playlist.len();
         let scene_name = &self.perf.playlist[playlist_index].to_string();
