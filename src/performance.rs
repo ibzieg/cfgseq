@@ -100,7 +100,39 @@ impl PerformanceController {
 
     pub fn update_def(&mut self, def: Performance) {
         self.perf = def;
-        self.init_scene();
+
+        let playlist_index = self.scene_index % self.perf.playlist.len();
+        let scene_name = &self.perf.playlist[playlist_index].to_string();
+
+        let bar_count = self.bar_count.to_owned();
+
+        for scene in self.perf.scenes.iter().filter(|s| &s.name == scene_name) {
+            for track in scene.tracks.iter() {
+                for inst in self.perf.instruments.iter().filter(|i| &i.name == &track.instrument) {
+                    match self.players.get_mut(&track.instrument) {
+                        Some(player) => {
+                            player.instrument = inst.clone();
+                            if track.follow.is_none() {
+                                player.seq_name =
+                                    track.play[bar_count % track.play.len()].to_string();
+                            } else {
+                                // Followers use their own bar count instead
+                                player.seq_name =
+                                    track.play[player.bar_count % track.play.len()].to_string();
+                            }
+                        },
+                        None => {
+                            let seq_name =
+                                track.play[self.bar_count % track.play.len()].to_string();
+                            self.players.insert(
+                                inst.name.to_string(),
+                                SequencePlayer::new(inst.clone(), seq_name)
+                            );
+                        }
+                    }
+                }
+            }
+        }
     }
 
     pub fn reset(&mut self) {
