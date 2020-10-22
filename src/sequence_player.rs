@@ -79,72 +79,69 @@ impl SequencePlayer {
 
         let mut note_on_was_triggered = false;
 
-        match self.instrument.find_sequence(&self.seq_name) {
-            Some(sequence) => {
-                let total_steps = sequence.steps.len() * 2;
-                let ticks_per_step = TICKS_PER_MEASURE as usize / total_steps;
+        let seq_name = self.seq_name.to_owned();
+        let mut instrument = &self.instrument;
+        let mut note_on_list = &mut self.note_on_list;
+        let inst_channel = instrument.channel - 1;
 
-                if self.clock_count % ticks_per_step == 0 && self.step_index < total_steps {
-                    if self.step_index % 2 == 0 {
-                        let maybe_step = &sequence.steps[self.step_index / 2];
-                        if maybe_step.is_some() {
-                            let step = maybe_step.as_ref().unwrap().clone();
-                            let mut velocity = DEFAULT_VELOCITY;
-                            match step.velocity {
-                                Some(v) => velocity = v,
-                                _ => {}
-                            }
-                            match &step.pitch {
-                                Some(ps) => {
-                                    for p in ps {
-                                        messages.push(midi::note_on(
-                                            self.instrument.channel - 1,
-                                            *p,
-                                            velocity,
-                                        ));
-                                        note_on_was_triggered = true;
-                                        self.note_on_list.push(*p);
-                                    }
-                                }
-                                None => {}
-                            }
-                            match &step.data {
-                                Some(values) => {
-                                    for i in 0..values.len() {
-                                        let value = values[i];
+        let mut note_off_all = false;
 
-                                        match &self.instrument.data {
-                                            Some(mod_devices) => {
-                                                if i < mod_devices.len() {
-                                                    let device = &mod_devices[i];
-                                                    let message = midi::control_change(
-                                                        device.channel - 1,
-                                                        device.control,
-                                                        value,
-                                                    );
-                                                    device_manager.write_messages(
-                                                        device.device.to_string(),
-                                                        vec![message],
-                                                    );
-                                                }
-                                            }
-                                            None => {}
-                                        }
-                                    }
-                                }
-                                None => {}
+        for sequence in instrument.sequences.iter().filter(|s| s.name == seq_name) {
+            let total_steps = sequence.steps.len() * 2;
+            let ticks_per_step = TICKS_PER_MEASURE as usize / total_steps;
+
+            if self.clock_count % ticks_per_step == 0 && self.step_index < total_steps {
+                if self.step_index % 2 == 0 {
+                    let maybe_step = &sequence.steps[self.step_index / 2];
+                    maybe_step.as_ref().map(|step| {
+                        let mut velocity = DEFAULT_VELOCITY;
+                        step.velocity.map(|value| velocity = value);
+
+                        step.pitch.as_ref().map(|ps| {
+                            for p in ps {
+                                messages.push(midi::note_on(
+                                    inst_channel,
+                                    *p,
+                                    velocity,
+                                ));
+                                note_on_was_triggered = true;
+                                note_on_list.push(*p);
                             }
-                        }
-                    } else {
-                        self.note_off_all(device_manager);
-                    }
-                    self.step_index += 1;
+                        });
+
+                        step.data.as_ref().map(|values| {
+                            for i in 0..values.len() {
+                                let value = values[i];
+
+                                instrument.data.as_ref().map(|mod_devices| {
+                                    if i < mod_devices.len() {
+                                        let device = &mod_devices[i];
+                                        let message = midi::control_change(
+                                            device.channel.to_owned() - 1,
+                                            device.control,
+                                            value,
+                                        );
+                                        device_manager.write_messages(
+                                            device.device.to_string(),
+                                            vec![message],
+                                        );
+                                    }
+                                });
+                            }
+                        });
+                    });
+                } else {
+                    note_off_all = true;
                 }
+                self.step_index += 1;
             }
-            None => {}
         }
 
         self.clock_count += 1;
+
+        if note_off_all {
+            self.note_off_all(device_manager);
+        }
 
         if messages.len() > 0 {
             device_manager.write_messages(self.instrument.device.to_string(), messages);
