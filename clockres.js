@@ -16,7 +16,7 @@ function checkClockRes(n, maxSteps) {
 (function main() {
     const ppq = 24;
     const ppb = ppq * 4.0;
-    let maxSteps = 64;
+    let maxSteps = 128;
 
     let m;
     for (m = 1.0; m < 1000; m += 1.0) {

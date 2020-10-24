@@ -24,9 +24,12 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
 
+use spin_sleep;
+
 // -------------------------------------------------------------------------------------------------
 
 const MIDI_BUFFER_SIZE: usize = 1024;
+const VERBOSE_DEBUG: bool = false;
 
 // -------------------------------------------------------------------------------------------------
 
@@ -52,7 +55,7 @@ impl DeviceManager {
                             Ok(dev) => match self.context.output_port(dev, 1024) {
                                 Ok(mut output_port) => {
                                     for message in &messages {
-                                        // println!("{:?}", message);
+                                        if VERBOSE_DEBUG { println!("{:?}", message); }
                                         output_port
                                             .write_message(*message)
                                             .expect("midi write_message failed");
@@ -109,7 +112,7 @@ pub fn start_midi_listener(
                     tx.send((port.device(), events)).unwrap();
                 }
             }
-            thread::sleep(midi_read_wait);
+            spin_sleep::sleep(midi_read_wait);
         }
     });
     rx
@@ -155,6 +158,15 @@ pub fn note_off(channel: u8, pitch: u8, velocity: u8) -> MidiMessage {
         status: 0x80 + channel,
         data1: pitch,
         data2: velocity,
+        data3: 0,
+    }
+}
+
+pub fn program_change(channel: u8, program: u8) -> MidiMessage {
+    MidiMessage {
+        status: 0xC0 + channel,
+        data1: program,
+        data2: 0,
         data3: 0,
     }
 }

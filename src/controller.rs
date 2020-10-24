@@ -19,8 +19,9 @@
 extern crate portmidi;
 
 use std::sync::mpsc::{channel, Receiver, Sender};
-use std::time::{SystemTime, UNIX_EPOCH};
 use std::{thread, time};
+
+use spin_sleep;
 
 use crate::config::{CLOCK_MULTIPLIER, DEFAULT_PARTS_PER_QUARTER};
 use crate::context::Context;
@@ -29,15 +30,7 @@ use crate::midi::start_midi_listener;
 use crate::models::Controller;
 use crate::performance::start_performance;
 
-// Time --------------------------------------------------------------------------------------------
-
-pub fn now_millis() -> u128 {
-    let start = SystemTime::now();
-    let since_the_epoch = start
-        .duration_since(UNIX_EPOCH)
-        .expect("Time went backwards");
-    since_the_epoch.as_millis()
-}
+// -------------------------------------------------------------------------------------------------
 
 pub fn average(values: &[f64]) -> f64 {
     let mut avg = 0.0;
@@ -72,7 +65,8 @@ pub fn start_clock_multiplier(
                 tick_duration = time::Duration::from_micros(micros);
 
                 // flush remaining ticks in case the clock arrived sooner than expected
-                while clock_enabled && tick_counter < CLOCK_MULTIPLIER - 1 {
+                while clock_enabled && tick_counter < CLOCK_MULTIPLIER {
+                    // println!("⚠️  FLUSH CLOCK {}/{} ticks micros={}", tick_counter, CLOCK_MULTIPLIER, micros);
                     clock_send
                         .send(tick_counter)
                         .expect("clock_multiplier send tick failed");
@@ -83,15 +77,17 @@ pub fn start_clock_multiplier(
                 tick_counter = 0;
             }
 
-            if clock_enabled && tick_counter < CLOCK_MULTIPLIER - 1 {
+            if clock_enabled && tick_counter < CLOCK_MULTIPLIER {
                 clock_send
                     .send(tick_counter)
                     .expect("clock_multiplier send tick failed");
                 tick_counter += 1;
-                thread::sleep(tick_duration);
-            } else {
-                // Short sleep before polling, waiting for clock to reset
-                thread::sleep(time::Duration::from_micros(100));
+                if tick_counter < CLOCK_MULTIPLIER {
+                    spin_sleep::sleep(tick_duration);
+                } else {
+                    // Short sleep before polling, waiting for clock to reset
+                    spin_sleep::sleep(time::Duration::from_micros(1));
+                }
             }
         }
     });
@@ -124,16 +120,16 @@ pub fn start_controller(context: &Context) {
         let mut clock_count = 0;
         let mut beat_count = 0;
         let mut bar_count = 1;
-        let mut last_tick = now_millis();
+        let mut last_tick = log::now_millis();
         let mut tick_duration_history: [f64; 48] = [0.0; 48];
-        let mut clock_start_time = now_millis();
+        let mut clock_start_time = log::now_millis();
 
         loop {
             let (device, events) = midi_recv.recv().unwrap();
 
             let ctrl_updated_msg = ctrl_updated_recv.try_recv();
             if ctrl_updated_msg.is_ok() {
-                log::success("UPDATE".to_string(), now_millis() - clock_start_time);
+                log::success("UPDATE".to_string(), log::now_millis() - clock_start_time);
                 ctrl_def = ctrl_updated_msg.unwrap();
             }
 
@@ -153,7 +149,7 @@ pub fn start_controller(context: &Context) {
                             ppq = ctrl_def.ppq.unwrap() as usize;
                         }
 
-                        let tick = now_millis();
+                        let tick = log::now_millis();
                         let tick_elapsed = (tick - last_tick) as f64;
                         last_tick = tick;
                         tick_duration_history[clock_count % tick_duration_history.len()] =
@@ -179,7 +175,7 @@ pub fn start_controller(context: &Context) {
 
                             log::info(
                                 format!("[{:0>3}:{}]\tBPM={:.1}", bar_count, beat_count, bpm,),
-                                now_millis() - clock_start_time,
+                                log::now_millis() - clock_start_time,
                             );
                         }
 
@@ -193,16 +189,16 @@ pub fn start_controller(context: &Context) {
                         beat_count = 0;
                         bar_count = 1;
                         clock_count = 0;
-                        last_tick = now_millis();
-                        clock_start_time = now_millis();
-                        log::event("START".to_string(), now_millis() - clock_start_time);
+                        last_tick = log::now_millis();
+                        clock_start_time = log::now_millis();
+                        log::event("START".to_string(), log::now_millis() - clock_start_time);
                         clock_reset_send
                             .send(true)
                             .expect("clock_reset_send failed");
                     } else if message.status == 252 {
                         // Stop
-                        clock_start_time = now_millis();
-                        log::event("STOP".to_string(), now_millis() - clock_start_time);
+                        clock_start_time = log::now_millis();
+                        log::event("STOP".to_string(), log::now_millis() - clock_start_time);
                         midi_state_send.send(false).expect("midi_state_send failed");
                         clock_reset_send
                             .send(true)

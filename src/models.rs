@@ -20,6 +20,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::config::{DEFAULT_MIDI_CHANNEL, DEFAULT_PARTS_PER_QUARTER};
 
+// Test
+#[allow(dead_code)]
+pub struct MyTest {
+    whatever: Result<u8, String>
+}
+
+
 // Controller --------------------------------------------------------------------------------------
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -40,6 +47,7 @@ impl Clone for Controller {
 }
 
 impl Controller {
+    #[allow(dead_code)]
     pub fn new() -> Controller {
         Controller {
             device: String::new(),
@@ -73,7 +81,6 @@ impl Clone for Track {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Scene {
     pub name: String,
-    pub master: Option<String>,
     pub tracks: Vec<Track>,
 }
 
@@ -81,7 +88,6 @@ impl Clone for Scene {
     fn clone(&self) -> Scene {
         Scene {
             name: self.name.to_owned(),
-            master: self.master.to_owned(),
             tracks: self.tracks.to_vec(),
         }
     }
@@ -94,17 +100,22 @@ pub struct SequenceStep {
     pub pitch: Option<Vec<u8>>,
     pub velocity: Option<u8>,
     pub data: Option<Vec<u8>>,
+    pub program: Option<u8>,
 }
 
 impl Clone for SequenceStep {
     fn clone(&self) -> SequenceStep {
         SequenceStep {
-            pitch: self.pitch.to_owned(),
+            pitch: match &self.pitch {
+                Some(p) => Some(p.to_vec()),
+                None => None,
+            },
             velocity: self.velocity.to_owned(),
             data: match &self.data {
                 Some(d) => Some(d.to_vec()),
                 None => None,
             },
+            program: self.program.to_owned()
         }
     }
 }
@@ -178,6 +189,7 @@ impl Instrument {
         }
     }
 
+    #[allow(dead_code)]
     pub fn find_sequence(&self, name: &String) -> Option<&Sequence> {
         let mut result: Option<&Sequence> = None;
         for sequence in &self.sequences {
@@ -215,6 +227,7 @@ pub struct Performance {
 }
 
 impl Performance {
+    #[allow(dead_code)]
     pub fn new() -> Performance {
         Performance {
             controller: Controller::new(),
@@ -224,6 +237,7 @@ impl Performance {
         }
     }
 
+    #[allow(dead_code)]
     pub fn find_scene(&self, name: &String) -> Option<&Scene> {
         let mut result: Option<&Scene> = None;
         for scene in &self.scenes {
@@ -234,6 +248,7 @@ impl Performance {
         result
     }
 
+    #[allow(dead_code)]
     pub fn find_instrument(&self, name: &String) -> Option<&Instrument> {
         let mut result: Option<&Instrument> = None;
         for instrument in &self.instruments {

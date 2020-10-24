@@ -18,6 +18,7 @@
  */
 use ansi_term::{Color, Style};
 use chrono::Duration;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 pub fn format_duration(dur: Duration) -> String {
     let mut t = dur.num_milliseconds();
@@ -58,3 +59,12 @@ pub fn event(text: String, timestamp: u128) {
 pub fn success(text: String, timestamp: u128) {
     info(Color::Green.paint(text).to_string(), timestamp);
 }
+
+pub fn now_millis() -> u128 {
+    let start = SystemTime::now();
+    let since_the_epoch = start
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards");
+    since_the_epoch.as_millis()
+}
+

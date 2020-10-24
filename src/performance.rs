@@ -20,14 +20,15 @@ use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration};
 
 use crate::context::Context;
 use crate::midi::DeviceManager;
 use crate::models::{Controller, Performance};
 use crate::performance_file::{load_performance_file, start_file_watcher};
 use crate::sequence_player::SequencePlayer;
-use crate::config::TICKS_PER_MEASURE;
+use crate::config::{TICKS_PER_MEASURE, CLOCK_MULTIPLIER};
+use crate::log;
 
 pub fn start_performance(
     context: &Context,
@@ -49,7 +50,7 @@ pub fn start_performance(
     thread::spawn(move || {
         let mut perf_ctrl = PerformanceController::new(perf);
 
-        let wait_dur = Duration::from_micros(50);
+        let wait_dur = Duration::from_micros(1);
 
         loop {
             let perf_update = perf_update_recv.try_recv();
@@ -64,7 +65,9 @@ pub fn start_performance(
             }
             let clock_msg = mult_clock_recv.try_recv();
             if clock_msg.is_ok() {
-                perf_ctrl.clock();
+                // let now = SystemTime::now();
+                perf_ctrl.clock(clock_msg.unwrap());
+                // println!("elapsed={}us", now.elapsed().unwrap().as_micros());
             }
             thread::sleep(wait_dur);
         }
@@ -136,6 +139,7 @@ impl PerformanceController {
     }
 
     pub fn reset(&mut self) {
+        self.clock_count = 0;
         self.scene_index = 0;
         self.bar_count = 0;
         self.init_scene();
@@ -164,6 +168,24 @@ impl PerformanceController {
 
         let playlist_index = self.scene_index % self.perf.playlist.len();
         let scene_name = &self.perf.playlist[playlist_index].to_string();
+        let mut next_scene = false;
+
+        for scene in self.perf.scenes.iter().filter(|s| &s.name == scene_name) {
+            let first_track = &scene.tracks[0];
+            if self.bar_count >= first_track.play.len() {
+                next_scene = true;
+            }
+        }
+
+        if next_scene {
+            self.scene_index += 1;
+            self.bar_count = 0;
+            self.init_scene();
+        }
+
+        let playlist_index = self.scene_index % self.perf.playlist.len();
+        let scene_name = &self.perf.playlist[playlist_index].to_string();
+
 
         let bar_count = self.bar_count.to_owned();
 
@@ -174,16 +196,26 @@ impl PerformanceController {
                     player.reset();
                     player.seq_name =
                         track.play[bar_count  % track.play.len()].to_string();
-
                 });
             }
         }
+
+        if next_scene {
+            log::event(format!("SCENE {}/{} \"{}\" ", self.scene_index, self.perf.playlist.len(), scene_name), 0);
+        }
     }
 
-    pub fn clock(&mut self) {
-        self.clock_count += 1;
+    pub fn clock(&mut self, tick_count: u64) {
 
-        if self.clock_count > 0 && self.clock_count % TICKS_PER_MEASURE as usize == 0 {
+
+        let quarter_count = self.clock_count as u64 % CLOCK_MULTIPLIER;
+        if quarter_count != tick_count {
+            println!("qc={} != tc={}", quarter_count, tick_count);
+        }
+
+        if self.clock_count % TICKS_PER_MEASURE as usize == 0 {
+            // println!("ticker per bar = {}", self.clock_count);
+            self.clock_count = 0;
             self.next_bar();
         }
 
@@ -215,5 +247,6 @@ impl PerformanceController {
             }
         }
 
+        self.clock_count += 1;
     }
 }

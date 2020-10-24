@@ -80,8 +80,8 @@ impl SequencePlayer {
         let mut note_on_was_triggered = false;
 
         let seq_name = self.seq_name.to_owned();
-        let mut instrument = &self.instrument;
-        let mut note_on_list = &mut self.note_on_list;
+        let instrument = &self.instrument;
+        let note_on_list = &mut self.note_on_list;
         let inst_channel = instrument.channel - 1;
 
         let mut note_off_all = false;
@@ -107,6 +107,13 @@ impl SequencePlayer {
                                 note_on_was_triggered = true;
                                 note_on_list.push(*p);
                             }
+                        });
+
+                        step.program.as_ref().map(|p| {
+                            messages.push(midi::program_change(
+                                inst_channel,
+                                *p
+                            ));
                         });
 
                         step.data.as_ref().map(|values| {
