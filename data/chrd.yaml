@@ -1,0 +1,35 @@
+#
+# MIDI Devices:
+#	DeviceInfo { id: 0, name: "IAC Driver Bus 1", dir: Input }
+#	DeviceInfo { id: 1, name: "828x MIDI Port", dir: Input }
+#	DeviceInfo { id: 2, name: "828x Sync Port", dir: Input }
+#	DeviceInfo { id: 3, name: "IAC Driver Bus 1", dir: Output }
+#	DeviceInfo { id: 4, name: "828x MIDI Port", dir: Output }
+#
+controller:
+  device: "IAC Driver Bus 1"
+  channel: 7
+  ppq: 24
+
+
+playlist:
+  - ONE
+
+
+scenes:
+  - name: ONE
+    tracks:
+      - instrument: poly1
+        play: [ A0 ]
+
+instruments:
+  - name: poly1
+    device: "828x MIDI Port"
+    channel: 12
+    sequences:
+      - name: A0
+        steps:
+          - { pitch: [E6, G#6, B6]  }
+          - { pitch: [F#6, A6, C#6]  }
+          - { pitch: [G#6, B6, D#7]  }
+          - { pitch: [A6, C#7, E7]  }

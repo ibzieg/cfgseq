@@ -170,3 +170,106 @@ pub fn program_change(channel: u8, program: u8) -> MidiMessage {
         data3: 0,
     }
 }
+
+// MIDI Data ---------------------------------------------------------------------------------------
+
+pub fn parse_midi_note(symbol: &String) -> u8 {
+    match symbol.parse::<u8>() {
+        Ok(n) => n,
+        Err(_) => parse_midi_note_symbol(symbol)
+    }
+}
+
+pub fn parse_midi_note_symbol(symbol: &String) -> u8 {
+    let mut note_index: u8 = 0;
+    let mut octave_index: u8 = 0;
+
+    symbol.chars().nth(0).map(|n| {
+        symbol.chars().nth(1).map(|s| {
+            let mut octave = String::from("0");
+            let mut sharp = String::from("");
+
+            if s == '#' {
+                sharp = String::from("#");
+                let octave_char = symbol.chars().nth(2);
+                if octave_char.is_some() {
+                    octave = octave_char.unwrap().to_string();
+                }
+            } else {
+                octave = s.to_string();
+            }
+
+            let note = [n.to_string(), sharp.to_string()].join("");
+            match note.as_str() {
+                "C" => { note_index = 0; },
+                "C#" => { note_index = 1; },
+                "D" => { note_index = 2; },
+                "D#" => { note_index = 3; },
+                "E" => { note_index = 4; },
+                "F" => { note_index = 5; },
+                "F#" => { note_index = 6; },
+                "G" => { note_index = 7; },
+                "G#" => { note_index = 8; },
+                "A" => { note_index = 9; },
+                "A#" => { note_index = 10; },
+                "B" => { note_index = 11; },
+                _ => { note_index = 0; },
+            }
+
+            match octave.as_str() {
+                "0" => { octave_index = 0; }
+                "1" => { octave_index = 1; }
+                "2" => { octave_index = 2; }
+                "3" => { octave_index = 3; }
+                "4" => { octave_index = 4; }
+                "5" => { octave_index = 5; }
+                "6" => { octave_index = 6; }
+                "7" => { octave_index = 7; }
+                "8" => { octave_index = 8; }
+                "9" => { octave_index = 9; }
+                _ => { octave_index = 0; }
+            }
+        });
+    });
+
+    note_index + octave_index * 12
+}
+
+// Tests -------------------------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use crate::midi::{parse_midi_note_symbol, parse_midi_note};
+
+    #[test]
+    fn test_parse_midi_note_symbol() {
+        assert_eq!(parse_midi_note_symbol(&"A#2".to_string()), 34);
+        assert_eq!(parse_midi_note_symbol(&"D5".to_string()), 62);
+        assert_eq!(parse_midi_note_symbol(&"C5".to_string()), 60);
+        assert_eq!(parse_midi_note_symbol(&"E5".to_string()), 64);
+        assert_eq!(parse_midi_note_symbol(&"G#4".to_string()), 56);
+        assert_eq!(parse_midi_note_symbol(&"x".to_string()), 0);
+        assert_eq!(parse_midi_note_symbol(&"x#zw".to_string()), 0);
+    }
+
+    #[test]
+    fn test_parse_midi_note() {
+        assert_eq!(parse_midi_note(&"A#2".to_string()), 34);
+        assert_eq!(parse_midi_note(&"D5".to_string()), 62);
+        assert_eq!(parse_midi_note(&"C5".to_string()), 60);
+        assert_eq!(parse_midi_note(&"E5".to_string()), 64);
+        assert_eq!(parse_midi_note(&"G#4".to_string()), 56);
+        assert_eq!(parse_midi_note(&"x".to_string()), 0);
+        assert_eq!(parse_midi_note(&"x#zw".to_string()), 0);
+
+        assert_eq!(parse_midi_note(&"34".to_string()), 34);
+        assert_eq!(parse_midi_note(&"62".to_string()), 62);
+        assert_eq!(parse_midi_note(&"60".to_string()), 60);
+        assert_eq!(parse_midi_note(&"64".to_string()), 64);
+        assert_eq!(parse_midi_note(&"56".to_string()), 56);
+        assert_eq!(parse_midi_note(&"0".to_string()), 0);
+        assert_eq!(parse_midi_note(&"111".to_string()), 111);
+
+    }
+}
+

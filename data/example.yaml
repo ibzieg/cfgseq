@@ -1,6 +1,6 @@
 controller:
-#  device: "IAC Driver Bus 1"
-  device: "828x MIDI Port"
+  device: "IAC Driver Bus 1"
+#  device: "828x MIDI Port"
   channel: 7
   ppq: 24
 
@@ -13,13 +13,11 @@ playlist:
 
 scenes:
   - name: intro
-    master: inst1
     tracks:
       - instrument: drum1
         play: [ A ]
 
       - instrument: inst2
-        follow: drum1
         play: [ D4 ]
 
       - instrument: drum2
@@ -45,46 +43,10 @@ instruments:
     sequences:
       - name: A
         steps:
-          - { pitch: [ 36 ], velocity: 118, data: [ 120, 70 ] }
-          - null
-          - null
-          - null
-
-          - { pitch: [ 36 ], velocity: 93, data: [ 60, 68 ] }
-          - null
-          - null
-          - null
-
-          - { pitch: [ 36 ], velocity: 60, data: [ 60, 38 ] }
-          - null
-          - null
-          - null
-
-          - { pitch: [ 36 ], velocity: 60, data: [ 60, 108 ] }
-          - null
-          - null
-          - null
-      - name: B
-        steps:
-          - { pitch: [ 36 ], velocity: 39, data: [ 67, 94 ] }
-          - null
-          - null
-          - null
-
-          - null
-          - { pitch: [ 36 ], velocity: 88, data: [ 59, 46 ] }
-          - null
-          - null
-
-          - null
-          - null
-          - null
-          - null
-
-          - null
-          - null
-          - { pitch: [ 36 ], velocity: 91, data: [ 104, 26 ] }
-          - null
+          - { pitch: [ 36 ], velocity: 100, data: [ 120, 70 ] }
+          - { pitch: [ 36 ], velocity: 100, data: [ 60, 68 ] }
+          - { pitch: [ 36 ], velocity: 100, data: [ 60, 38 ] }
+          - { pitch: [ 36 ], velocity: 100, data: [ 60, 108 ] }
 
   - name: drum2
     device: "828x MIDI Port"
@@ -158,9 +120,9 @@ instruments:
           - { pitch: [ 42 ], velocity: 93, data: [ 60, 68 ] }
           - null
 
-  - name: poly1
+  - name: inst1
     device: "828x MIDI Port"
-    channel: 12
+    channel: 1
     data:
       - device: IAC1
         channel: 4
@@ -171,15 +133,14 @@ instruments:
     sequences:
       - name: A
         steps:
+          - { pitch: [ 31 ], velocity: 118, data: [ 120, 70 ] }
           - null
-          - { pitch: [ 31, 34, 38 ], velocity: 118, data: [ 120, 70 ] }
+          - { pitch: [ 34 ], velocity: 118, data: [ 120, 70 ] }
           - null
-          - { pitch: [ 34, 38, 41 ], velocity: 118, data: [ 120, 70 ] }
+          - { pitch: [ 38 ], velocity: 118, data: [ 120, 70 ] }
           - null
+          - { pitch: [ 41 ], velocity: 118, data: [ 120, 70 ] }
           - null
-          - null
-          - null
-
 
   - name: inst2
     device: "828x MIDI Port"
@@ -202,64 +163,25 @@ instruments:
           - null
           - { pitch: [ 41 ], velocity: 118, data: [ 120, 70 ] }
           - null
-      - name: B
+
+  - name: poly1
+    device: "828x MIDI Port"
+    channel: 12
+    data:
+      - device: IAC1
+        channel: 4
+        control: 40
+      - device: "828x MIDI Port"
+        channel: 10
+        control: 56
+    sequences:
+      - name: A
         steps:
-          - { pitch: [ 55 ], velocity: 118, data: [ 120, 70 ] }
           - null
-          - { pitch: [ 53 ], velocity: 118, data: [ 120, 70 ] }
+          - { pitch: [ 31, 34, 38 ], velocity: 118, data: [ 120, 70 ] }
           - null
-          - { pitch: [ 50 ], velocity: 118, data: [ 120, 70 ] }
-          - null
-          - { pitch: [ 46 ], velocity: 118, data: [ 120, 70 ] }
-          - null
-      - name: C
-        steps:
-          - { pitch: [ 31 ], velocity: 118, data: [ 120, 70 ] }
-          - null
-          - { pitch: [ 34 ], velocity: 118, data: [ 120, 70 ] }
-          - null
-          - { pitch: [ 38 ], velocity: 118, data: [ 120, 70 ] }
-          - null
-          - { pitch: [ 41 ], velocity: 118, data: [ 120, 70 ] }
-          - null
-
-      - name: D3
-        steps:
-          - { pitch: [ 31 ], velocity: 118, data: [ 120, 70 ] }
-          - null
-          - null
-          - { pitch: [ 34 ], velocity: 118, data: [ 120, 70 ] }
-          - null
-          - null
-          - { pitch: [ 38 ], velocity: 118, data: [ 120, 70 ] }
-          - null
-          - null
-          - { pitch: [ 41 ], velocity: 118, data: [ 120, 70 ] }
-          - null
-          - null
-          - { pitch: [ 48 ], velocity: 118, data: [ 120, 70 ] }
-          - null
-          - null
-      - name: D4
-        steps:
-          - null #{ pitch: [ 31 ], velocity: 118, data: [ 120, 70 ] }
-          - { pitch: [ 34 ], velocity: 118, data: [ 120, 70 ] }
-          - { pitch: [ 34 ], velocity: 118, data: [ 120, 70 ] }
-          - { pitch: [ 34 ], velocity: 118, data: [ 120, 70 ] }
-
-          - { pitch: [ 41 ], velocity: 118, data: [ 120, 70 ] }
+          - { pitch: [ 34, 38, 41 ], velocity: 118, data: [ 120, 70 ] }
           - null
           - null
           - null
-
-          - null
-          - null
-          - null
-          - null
-
-          - null
-          - null
-          - null
-          - null
-
           - null

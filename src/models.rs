@@ -20,13 +20,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::config::{DEFAULT_MIDI_CHANNEL, DEFAULT_PARTS_PER_QUARTER};
 
-// Test
-#[allow(dead_code)]
-pub struct MyTest {
-    whatever: Result<u8, String>
-}
-
-
 // Controller --------------------------------------------------------------------------------------
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -97,8 +90,8 @@ impl Clone for Scene {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SequenceStep {
-    pub pitch: Option<Vec<u8>>,
-    pub velocity: Option<u8>,
+    pub pitch: Option<Vec<String>>,
+    pub velocity: Option<String>,
     pub data: Option<Vec<u8>>,
     pub program: Option<u8>,
 }

@@ -22,8 +22,8 @@ use portmidi::MidiMessage;
 
 use crate::config::{DEFAULT_VELOCITY, TICKS_PER_MEASURE};
 use crate::midi;
-use crate::midi::DeviceManager;
-use crate::models::Instrument;
+use crate::midi::{DeviceManager, parse_midi_note};
+use crate::models::{Instrument};
 
 // Sequence Player ---------------------------------------------------------------------------------
 
@@ -95,17 +95,18 @@ impl SequencePlayer {
                     let maybe_step = &sequence.steps[self.step_index / 2];
                     maybe_step.as_ref().map(|step| {
                         let mut velocity = DEFAULT_VELOCITY;
-                        step.velocity.map(|value| velocity = value);
+                        step.velocity.as_ref().map(|value| velocity = parse_midi_note(&value));
 
-                        step.pitch.as_ref().map(|ps| {
-                            for p in ps {
+                        step.pitch.as_ref().map(|notes| {
+                            for note in notes {
+                                let p = parse_midi_note(note);
                                 messages.push(midi::note_on(
                                     inst_channel,
-                                    *p,
+                                    p,
                                     velocity,
                                 ));
                                 note_on_was_triggered = true;
-                                note_on_list.push(*p);
+                                note_on_list.push(p);
                             }
                         });
 
