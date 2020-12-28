@@ -1,0 +1,146 @@
+controller:
+  device: "IAC Driver Bus 1"
+  channel: 7
+  ppq: 24
+
+
+playlist:
+  - FULL
+
+
+scenes:
+  - name: FULL
+    tracks:
+      - instrument: drum1
+        play: [ B1, B2 ]
+
+      - instrument: drum2
+        play: [ S0 ]
+
+      - instrument: drum3
+        play: [ H0 ]
+
+      - instrument: poly1
+        follow: drum1
+        play: [ P1, P2 ]
+
+instruments:
+  - name: drum1
+    # device: "USB Uno MIDI Interface"
+    device: "828x MIDI Port"
+    channel: 14
+    sequences:
+      - name: B0
+        steps:
+          - { pitch: [ 36 ] }
+          - { pitch: [ 36 ] }
+          - { pitch: [ 36 ] }
+          - { pitch: [ 36 ] }
+      - name: B1
+        steps:
+          - { pitch: [ 36 ] }
+          - null
+          - null
+          - null
+
+          - null
+          - null
+          - { pitch: [ 36 ] }
+          - null
+
+          - null
+          - { pitch: [ 36 ] }
+          - null
+          - null
+
+          - null
+          - null
+          - null
+          - null
+
+      - name: B2
+        steps:
+          - { pitch: [ 36 ] }
+          - null
+          - null
+          - null
+
+          - null
+          - null
+          - { pitch: [ 36 ] }
+          - null
+
+          - null
+          - { pitch: [ 36 ] }
+          - { pitch: [ 36 ] }
+          - null
+
+          - null
+          - null
+          - null
+          - null
+
+  - name: drum2
+    # device: "USB Uno MIDI Interface"
+    device: "828x MIDI Port"
+    channel: 14
+    sequences:
+      - name: S0
+        steps:
+          - null
+          - { pitch: [38] }
+          - null
+          - { pitch: [38] }
+
+  - name: drum3
+    # device: "USB Uno MIDI Interface"
+    device: "828x MIDI Port"
+    channel: 14
+    # 42, 39
+    sequences:
+      - name: H0
+        steps:
+          - null
+          - null
+          - { pitch: [42] }
+          - null
+
+          - null
+          - null
+          - { pitch: [42] }
+          - null
+
+          - null
+          - null
+          - { pitch: [42] }
+          - null
+
+          - { pitch: [39] }
+          - null
+          - { pitch: [42] }
+          - null
+
+  - name: poly1
+    device: "828x MIDI Port"
+    channel: 12
+    data:
+      - device: "828x MIDI Port"
+        channel: 12
+        control: 48 # Volca FM ALGTM
+      - device: "828x MIDI Port"
+        channel: 12 # Volca FM Modular Decay
+        control: 43
+    sequences:
+      - name: P1
+        steps:
+          - { pitch: [ 79 ], data: [ 12, 40 ]}
+          - { pitch: [ 65 ], data: [ 1, 60 ] }
+          - { pitch: [ 74 ], data: [ 13, 80 ] }
+          - { pitch: [ 70 ], data: [ 7, 70 ] }
+
+      - name: P2
+        steps:
+          - { pitch: [ 74 ], data: [ 11, 50 ] }
+          - { pitch: [ 65 ], data: [ 22, 30 ] }
+          - { pitch: [ 74 ], data: [ 30, 70 ] }
+          - { pitch: [ 79 ], data: [ 18, 40 ] }

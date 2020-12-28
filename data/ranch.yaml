@@ -1,0 +1,239 @@
+controller:
+  device: "IAC Driver Bus 1"
+  channel: 7
+  ppq: 24
+
+
+playlist:
+  - FU
+
+
+scenes:
+  - name: FULL
+    tracks:
+      - instrument: drum1
+        play: [ B1, B2 ]
+
+      - instrument: drum2
+        play: [ S0 ]
+
+      - instrument: drum3
+        follow: drum1
+        play: [ H0 ]
+
+      - instrument: inst1
+        play: [ A3 ]
+
+  - name: FU
+    tracks:
+      - instrument: drum1
+        play: [ B1, B2, B1 ]
+
+      - instrument: drum2
+        play: [ S0 ]
+
+      - instrument: inst1
+        # follow: drum1
+        play: [ A20, A21, A3 ]
+
+instruments:
+  - name: drum1
+    # device: "USB Uno MIDI Interface"
+    device: "828x MIDI Port"
+    channel: 14
+    sequences:
+      - name: B0
+        steps:
+          - { pitch: [ C3 ] }
+          - { pitch: [ C3 ] }
+          - { pitch: [ C3 ] }
+          - { pitch: [ C3 ] }
+      - name: B1
+        steps:
+          - { pitch: [ C3 ] }
+          - null
+          - null
+          - null
+
+          - null
+          - null
+          - { pitch: [ C3 ] }
+          - null
+
+          - null
+          - { pitch: [ C3 ] }
+          - null
+          - null
+
+          - null
+          - null
+          - null
+          - null
+
+      - name: B2
+        steps:
+          - { pitch: [ C3 ] }
+          - null
+          - null
+          - null
+
+          - null
+          - null
+          - { pitch: [ C3 ] }
+          - null
+
+          - null
+          - { pitch: [ C3 ] }
+          - { pitch: [ C3 ] }
+          - null
+
+          - null
+          - null
+          - null
+          - null
+
+  - name: drum2
+    # device: "USB Uno MIDI Interface"
+    device: "828x MIDI Port"
+    channel: 14
+    sequences:
+      - name: S0
+        steps:
+          - null
+          - { pitch: [D3] }
+          - null
+          - { pitch: [D3] }
+
+  - name: drum3
+    # device: "USB Uno MIDI Interface"
+    device: "828x MIDI Port"
+    channel: 14
+    # 42, 39
+    sequences:
+      - name: H0
+        steps:
+          - null
+          - null
+          - { pitch: [F#3] }
+          - null
+
+          - null
+          - null
+          - { pitch: [F#3] }
+          - null
+
+          - null
+          - null
+          - { pitch: [F#3] }
+          - null
+
+          - { pitch: [F#3] }
+          - null
+          - { pitch: [D#3] }
+          - null
+
+  - name: inst1
+    # device: "USB Uno MIDI Interface"
+    device: "IAC Driver Bus 1"
+    channel: 1
+    data:
+      - device: "IAC Driver Bus 1"
+        channel: 1
+        control: 10
+      - device: "IAC Driver Bus 1"
+        channel: 1
+        control: 11
+    sequences:
+      - name: A0
+        steps:
+          - { pitch: [C3],  velocity: 24, data: [41, 1] }
+          - { pitch: [D3],  velocity: 36, data: [40, 2] }
+          - { pitch: [D#4], velocity: 24, data: [42, 3] }
+          - null
+
+          - null
+          - { pitch: [A#2], velocity: 24, data: [43, 2] }
+          - null
+          - null
+
+
+      - name: A1
+        steps:
+          - { pitch: [A#3], velocity: 36, data: [40, 1] }
+          - null
+          - null
+          - { pitch: [A#2], velocity: 36, data: [50, 3] }
+
+          - null
+          - { pitch: [G3],  velocity: 24, data: [51, 5] }
+          - null
+          - { pitch: [A2],  velocity: 24, data: [52, 6] }
+
+
+      - name: A2
+        steps:
+          - { pitch: [G1] }
+          - { pitch: [A1]  }
+          - { pitch: [A#1] }
+          - { pitch: [C2] }
+          - { pitch: [D2] }
+          - { pitch: [D#2] }
+          - { pitch: [F2] }
+          - { pitch: [G3] }
+          - { pitch: [A3]  }
+          - { pitch: [A#3] }
+          - { pitch: [C4] }
+          - { pitch: [D4] }
+          - { pitch: [D#4] }
+          - { pitch: [F4] }
+      - name: A20
+        steps:
+          - { pitch: [G2], velocity: 34, data: [30, 30] }
+          - { pitch: [A2] }
+          - { pitch: [A#2], velocity: 36 }
+          - { pitch: [C3], velocity: 38, data: [36, 36] }
+          - { pitch: [D3], velocity: 40, data: [40, 40] }
+          - { pitch: [D#3] }
+          - { pitch: [F3], velocity: 54, data: [58, 58] }
+      - name: A21
+        steps:
+          - { pitch: [ G1 ], velocity: 34, data: [ 30, 30 ] }
+          - { pitch: [ A1 ] }
+          - { pitch: [ A#1 ], velocity: 36 }
+          - { pitch: [ C2 ], velocity: 38, data: [ 36, 36 ] }
+          - { pitch: [ D2 ], velocity: 40, data: [ 40, 40 ] }
+          - { pitch: [ D#2 ] }
+          - { pitch: [ F2 ], velocity: 54, data: [ 58, 58 ] }
+          - { pitch: [ A3 ] }
+          - { pitch: [ A#3 ], velocity: 36 }
+          - { pitch: [ C4 ], velocity: 38, data: [ 36, 36 ] }
+          - { pitch: [ D4 ], velocity: 40, data: [ 40, 40 ] }
+          - { pitch: [ D#4 ] }
+          - { pitch: [ F4 ], velocity: 54, data: [ 58, 58 ] }
+
+      - name: A3
+        steps:
+          - { pitch: [G1], velocity: 34, data: [30, 30] }
+          - { pitch: [A1] }
+          - { pitch: [A#1], velocity: 36 }
+          - { pitch: [C2], velocity: 38, data: [36, 36] }
+          - { pitch: [D2], velocity: 40, data: [40, 40] }
+          - { pitch: [D#2] }
+          - { pitch: [F2], velocity: 54, data: [58, 58] }
+
+          - { pitch: [G2], velocity: 34, data: [30, 30] }
+          - { pitch: [A2] }
+          - { pitch: [A#2], velocity: 36 }
+          - { pitch: [C3], velocity: 38, data: [36, 36] }
+          - { pitch: [D3], velocity: 40, data: [40, 40] }
+          - { pitch: [D#3] }
+          - { pitch: [F3], velocity: 54, data: [58, 58] }
+
+          - { pitch: [G3], velocity: 34, data: [30, 30] }
+          - { pitch: [A3] }
+          - { pitch: [A#3], velocity: 36 }
+          - { pitch: [C4], velocity: 38, data: [36, 36] }
+          - { pitch: [D4], velocity: 40, data: [40, 40] }
+          - { pitch: [D#4] }
+          - { pitch: [F4], velocity: 54, data: [58, 58] }
+

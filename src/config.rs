@@ -1,7 +1,7 @@
 /*
  * Copyright 2020, Ian Zieg
  *
- * This file is part of a program called "specsynth"
+ * This file is part of a program called "cfgseq"
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,4 +24,11 @@ pub const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 // Context  ----------------------------------------------------------------------------------------
 
-pub const DEFAULT_MIDI_CHANNEL: i32 = 0;
+pub const DEFAULT_MIDI_CHANNEL: u8 = 1;
+
+pub const DEFAULT_VELOCITY: u8 = 100;
+
+pub const CLOCK_MULTIPLIER: u64 = 84;
+pub const DEFAULT_PARTS_PER_QUARTER: u64 = 24;
+
+pub const TICKS_PER_MEASURE: u64 = CLOCK_MULTIPLIER * DEFAULT_PARTS_PER_QUARTER * 4;

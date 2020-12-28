@@ -1,7 +1,7 @@
 /*
  * Copyright 2020, Ian Zieg
  *
- * This file is part of a program called "specsynth"
+ * This file is part of a program called "cfgseq"
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,19 +16,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+use std::thread;
+use std::time::Duration;
+
 use docopt::Docopt;
 use serde::Deserialize;
 
 use crate::config::{PROJECT_NAME, VERSION};
 use crate::context::Context;
+use crate::controller::start_controller;
 use crate::midi::list_midi_devices;
-use crate::sequencer::play_sequencer;
 
 mod config;
 mod context;
+mod controller;
+mod log;
 mod midi;
-mod midi_controller;
-mod sequencer;
+mod models;
+mod performance;
+mod performance_file;
+mod sequence_player;
 
 // Options -----------------------------------------------------------------------------------------
 
@@ -36,22 +43,20 @@ const USAGE: &'static str = "
 CFG SEQ
 
 Usage:
-  specsynth list-devices
-  specsynth [--midi-device=<device_name>] [--midi-channel=<channel_index>] [--debug]
-  specsynth (-h | --help)
+  cfgseq list-devices
+  cfgseq [--performance=<perf_file>] [--debug]
+  cfgseq (-h | --help)
 
 Options:
   -h --help                        Show this screen.
   -d --debug                       Enable debug features
-  --midi-device=<device_name>      MIDI input device name.
-  --midi-channel=<channel_index>   MIDI input channel index.
+  --performance=<perf_file>        Performance definition file.
 ";
 
 #[derive(Debug, Deserialize)]
 struct Args {
     flag_debug: bool,
-    flag_midi_device: Vec<String>,
-    flag_midi_channel: Option<i32>,
+    flag_performance: Vec<String>,
     cmd_list_devices: bool,
 }
 
@@ -70,7 +75,7 @@ fn run() {
     if args.cmd_list_devices {
         list_midi_devices();
     } else {
-        play_sequencer(&context_from_args(&args));
+        start(&context_from_args(&args));
     }
 }
 
@@ -82,12 +87,17 @@ fn context_from_args(args: &Args) -> Context {
         println!("{:?}", args);
     }
 
-    if args.flag_midi_device.len() > 0 {
-        context.midi_output = args.flag_midi_device[0].to_owned();
-    }
-    if args.flag_midi_channel.is_some() {
-        context.midi_channel = args.flag_midi_channel.unwrap();
+    if args.flag_performance.len() > 0 {
+        context.performance = args.flag_performance[0].to_owned();
     }
 
     context
+}
+
+pub fn start(context: &Context) {
+    start_controller(context);
+
+    loop {
+        thread::sleep(Duration::from_millis(60_000));
+    }
 }

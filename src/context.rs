@@ -1,7 +1,7 @@
 /*
  * Copyright 2020, Ian Zieg
  *
- * This file is part of a program called "specsynth"
+ * This file is part of a program called "cfgseq"
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,19 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-use crate::config::DEFAULT_MIDI_CHANNEL;
-
 pub struct Context {
-    pub midi_channel: i32,
-    pub midi_output: String,
+    pub performance: String,
     pub debug: bool,
 }
 
 impl Context {
     pub fn new() -> Context {
         Context {
-            midi_channel: DEFAULT_MIDI_CHANNEL,
-            midi_output: String::new(),
+            performance: String::new(),
             debug: false,
         }
     }

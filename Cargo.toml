@@ -7,7 +7,13 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-portmidi = "^0.2"
-serde = "^1.0.108"
-serde_json = "^1.0.56"
+ansi_term = "^0.12"
+chrono = "0.4"
+crossbeam-channel = "0.4.0"
 docopt = "^1.1.0"
+notify = "5.0.0-pre.3"
+#portmidi = "^0.2"
+portmidi = { path = "../portmidi-rs" }
+serde = { version = "^1.0.108", features = ["derive"] }
+serde_yaml = "0.8"
+spin_sleep = "1.0.0"
