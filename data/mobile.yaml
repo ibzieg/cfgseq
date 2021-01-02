@@ -1,0 +1,217 @@
+controller:
+  device: "IAC Driver Bus 1"
+  channel: 7
+  ppq: 24
+
+
+playlist:
+  - EMPTYBAR
+  - INTRO1
+  - INTRO2
+  - INTRO2
+  - INTRO3
+  - INTRO3
+  - FULL
+  - FULL
+  - FULL
+  - FULL
+  - INTRO3
+  - INTRO2
+  - INTRO1
+  - _
+
+scenes:
+  - name: EMPTYBAR
+    tracks:
+      - instrument: inst1
+        play: [ _ ]
+
+  - name: INTRO1
+    tracks:
+      - instrument: inst1
+        play: [ A, A, A, A ]
+
+  - name: INTRO2
+    tracks:
+      - instrument: inst1
+        play: [ A, A, A, A ]
+
+      - instrument: poly1B
+        play: [ A1, A2, A3, A4 ]
+
+  - name: INTRO3
+    tracks:
+      - instrument: inst1
+        play: [ A, A, A, A ]
+
+      - instrument: poly1B
+        play: [ A1, A2, A3, A4 ]
+
+      - instrument: drum3
+        follow: inst1
+        play: [ T0, T1 ]
+
+  - name: FULL
+    tracks:
+      - instrument: inst1
+        play: [ B, B, B, B ]
+
+      - instrument: drum2
+        play: [ A0 ]
+
+      - instrument: drum3
+        follow: inst1
+        play: [ T0, T1 ]
+
+      - instrument: poly1
+        follow: inst1
+        play: [ A ]
+
+      - instrument: poly1B
+        play: [ A1, A2, A3, A4 ]
+
+instruments:
+  - name: inst1
+    # device: "USB Uno MIDI Interface"
+    device: "828x MIDI Port"
+    channel: 14
+    sequences:
+      - name: SyncTest
+        steps:
+          - { pitch: [ 36] }
+
+      - name: A
+        steps:
+          - { pitch: [ 36 ] }
+          - { pitch: [ 36 ] }
+          - { pitch: [ 36 ] }
+          - { pitch: [ 36 ] }
+      - name: B
+        steps:
+          - { pitch: [ 36 ] }
+          - null
+          - null
+          - null
+
+          - null
+          - null
+          - { pitch: [ 36 ] }
+          - null
+
+          - null
+          - { pitch: [ 36 ] }
+          - null
+          - null
+
+          - null
+          - null
+          - null
+          - null
+
+  - name: drum2
+    # device: "USB Uno MIDI Interface"
+    device: "828x MIDI Port"
+    channel: 14
+    sequences:
+      - name: A0
+        steps:
+          - null
+          - { pitch: [38] }
+          - null
+          - { pitch: [38] }
+
+  - name: drum3
+    # device: "USB Uno MIDI Interface"
+    device: "828x MIDI Port"
+    channel: 14
+    sequences:
+      - name: T0
+        steps:
+          - null
+          - { pitch: [39] }
+          - { pitch: [42] }
+          - null
+
+          - null
+          - null
+          - null
+          - null
+
+          - null
+          - null
+          - null
+          - null
+
+          - null
+          - null
+          - null
+          - null
+
+      - name: T1
+        steps:
+          - null
+          - { pitch: [42] }
+          - { pitch: [39] }
+          - null
+          - null
+          - null
+          - null
+          - null
+          - null
+          - null
+          - null
+          - null
+          - null
+          - null
+          - null
+          - null
+          -
+      - name: A0
+        steps:
+          - null
+          - { pitch: [42] }
+          - null
+          - { pitch: [39] }
+
+  - name: poly1
+    device: "828x MIDI Port"
+    channel: 12
+    data:
+      - device: "828x MIDI Port"
+        channel: 12
+        control: 40
+      - device: "828x MIDI Port"
+        channel: 12
+        control: 56
+    sequences:
+      - name: A
+        steps:
+          - { pitch: [ 67 ], program: 8 }
+          - null
+          - { pitch: [ 65 ], program: 12 }
+          - null
+          - null
+          - null
+          - null
+          - null
+          - null
+          - null
+          - null
+          - null
+          -
+  - name: poly1B
+    device: "828x MIDI Port"
+    channel: 12
+    sequences:
+      - name: A1
+        steps:
+          - { pitch: [ 79 ] }
+      - name: A2
+        steps:
+          - { pitch: [ 65 ] }
+      - name: A3
+        steps:
+          - { pitch: [ 74 ] }
+      - name: A4
+        steps:
+          - { pitch: [ 70 ] }

@@ -1,0 +1,144 @@
+#
+# MIDI Devices:
+#	DeviceInfo { id: 0, name: "IAC Driver Bus 1", dir: Input }
+#	DeviceInfo { id: 1, name: "828x MIDI Port", dir: Input }
+#	DeviceInfo { id: 2, name: "828x Sync Port", dir: Input }
+#	DeviceInfo { id: 3, name: "IAC Driver Bus 1", dir: Output }
+#	DeviceInfo { id: 4, name: "828x MIDI Port", dir: Output }
+#
+controller:
+  device: "IAC Driver Bus 1"
+  channel: 7
+  ppq: 24
+
+
+playlist:
+  - ONE
+
+
+scenes:
+  - name: ONE
+    tracks:
+      - instrument: drum1
+        play: [ A2, A1 ]
+
+      - instrument: inst1
+        follow: drum1
+        play: [ A1, A2 ]
+
+      - instrument: drum2
+        play: [ A1, A2 ]
+
+      - instrument: drum3
+        play: [ A0 ]
+
+instruments:
+  - name: inst1
+    device: "IAC Driver Bus 1"
+    channel: 1
+    data:
+      - device: "IAC Driver Bus 1"
+        channel: 1
+        control: 10
+      - device: "IAC Driver Bus 1"
+        channel: 1
+        control: 11
+    sequences:
+      - name: A0
+        steps:
+          - { pitch: [E3],  velocity: F#3,  data: [40, 7] }
+          - { pitch: [F#3], velocity: G#3,  data: [41, 7] }
+          - { pitch: [G#3], velocity: A3,   data: [42, 7] }
+          - { pitch: [A3],  velocity: B3,   data: [43, 7] }
+          - null
+          - { pitch: [B3],  velocity: C#4,  data: [44, 7] }
+          - { pitch: [C#4], velocity: D#4,  data: [45, 7] }
+          - { pitch: [D#4], velocity: E4,   data: [46, 7] }
+          - { pitch: [E4],  velocity: E3,   data: [47, 7] }
+
+      - name: A1
+        steps:
+          - { pitch: [E3],  velocity: E3,  data: [40, 4] }
+          - null
+          - { pitch: [G#2], velocity: A3,   data: [42, 4] }
+          - { pitch: [A5],  velocity: A5,   data: [43, 4] }
+          - null
+          - null
+          - null
+          - { pitch: [D#4], velocity: E4,   data: [46, 4] }
+          - null
+
+      - name: A2
+        steps:
+          - { pitch: [E3],  velocity: E3,  data: [40, 4] }
+          - { pitch: [F#3], velocity: G#3,  data: [41, 4] }
+          - null
+          - { pitch: [A6],  velocity: B3,   data: [43, 4] }
+          - null
+          - null
+          - { pitch: [C#4], velocity: C#4,  data: [45, 4] }
+          - null
+          - { pitch: [E2],  velocity: E3,   data: [47, 4] }
+
+
+  - name: drum1
+    device: "828x MIDI Port"
+    channel: 14
+    sequences:
+
+      - name: A1
+        steps:
+          - { pitch: [ C3 ] }
+          - { pitch: [ C3 ] }
+          - { pitch: [ C3 ] }
+
+      - name: A2
+        steps:
+          - { pitch: [ C3 ] }
+          - { pitch: [ C3 ] }
+          - null
+          - null
+          - { pitch: [ C3 ] }
+          - null
+          - null
+          - null
+          - { pitch: [ C3 ] }
+          - null
+          - null
+          - null
+
+  - name: drum2
+    device: "828x MIDI Port"
+    channel: 14
+    sequences:
+
+      - name: A1
+        steps:
+          - { pitch: [ D3 ] }
+          - null
+          - { pitch: [ D3 ] }
+
+      - name: A2
+        steps:
+          - null
+          - { pitch: [ D3 ] }
+          - null
+
+  - name: drum3
+    device: "828x MIDI Port"
+    channel: 14
+    sequences:
+
+      - name: A0
+        steps:
+          - { pitch: [ F#3 ] }
+          - null
+          - { pitch: [ F#3 ] }
+          - null
+
+          - { pitch: [ F#3 ] }
+
+          - null
+          - { pitch: [ F#3 ] }
+          - null
+          - { pitch: [ F#3 ] }
