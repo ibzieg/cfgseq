@@ -41,6 +41,22 @@ pub type ActiveNoteMap = HashMap<u8, usize>;
 //     }
 // }
 
+// Player Clock Result -----------------------------------------------------------------------------
+
+pub struct PlayerClockResult {
+    pub note_was_played:  bool,
+    pub sequence_ended: bool,
+}
+
+impl PlayerClockResult {
+    pub fn new() -> PlayerClockResult {
+        PlayerClockResult {
+            note_was_played: false,
+            sequence_ended: false
+        }
+    }
+}
+
 // Sequence Player ---------------------------------------------------------------------------------
 
 pub struct SequencePlayer {
@@ -89,30 +105,10 @@ impl SequencePlayer {
         self.note_on_map.clear();
     }
 
-    // pub fn note_off_clock(&mut self, device_manager: &mut DeviceManager, note_map: &mut HashMap<u8, usize>) {
-    //     let mut messages: Vec<MidiMessage> = Vec::new();
-    //
-    //     // let note_on_map = &mut self.note_on_map;
-    //     for (note, ticks) in note_map {
-    //         if *ticks > 0 {
-    //             if *ticks == 1 {
-    //                 // Execute Note-Off
-    //                 messages.push(midi::note_off(self.instrument.channel - 1, *note, 0));
-    //             }
-    //             // Decrement
-    //             note_map.insert(*note, *ticks-1);
-    //         }
-    //     }
-    //     if messages.len() > 0 {
-    //         device_manager.write_messages(self.instrument.device.to_string(), messages);
-    //     }
-    // }
-
-    pub fn clock(&mut self, device_manager: &mut DeviceManager) -> bool {
+    pub fn clock(&mut self, device_manager: &mut DeviceManager) -> PlayerClockResult {
+        let mut result = PlayerClockResult::new();
 
         let mut messages: Vec<MidiMessage> = Vec::new();
-
-        let mut note_on_was_triggered = false;
 
         let seq_name = self.seq_name.to_owned();
         let instrument = &self.instrument;
@@ -169,7 +165,7 @@ impl SequencePlayer {
                                 p,
                                 velocity,
                             ));
-                            note_on_was_triggered = true;
+                            result.note_was_played = true;
                             note_on_map.insert(p, ticks_per_step);
                         }
                     });
@@ -196,22 +192,14 @@ impl SequencePlayer {
                         }
                     });
                 });
+
                 self.step_index += 1;
             }
+
+            if self.clock_count >= (ticks_per_step * total_steps) - 1 {
+                result.sequence_ended = true;
+            }
         }
-
-        /*
-        Schedule the note-offs as a count of ticks in the future like this
-        Note-Off Map {
-          64: 8
-          80: 16
-          28: 7
-        }
-
-        This should allow sequences to change at any time without interrupting currently playing notes.
-
-        Execute All Notes Off when a Stop command is received.
-         */
 
         self.clock_count += 1;
 
@@ -220,6 +208,6 @@ impl SequencePlayer {
             device_manager.write_messages(self.instrument.device.to_string(), messages);
         }
 
-        note_on_was_triggered
+        result
     }
 }

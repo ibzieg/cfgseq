@@ -33,7 +33,7 @@ use crate::log;
 pub fn start_performance(
     context: &Context,
     clock_reset_recv: Receiver<bool>,
-    mult_clock_recv: Receiver<u64>,
+    midi_clock_recv: Receiver<u64>,
     ctrl_updated: Sender<Controller>,
 ) -> Controller {
     let mut perf =
@@ -63,7 +63,7 @@ pub fn start_performance(
             if reset_msg.is_ok() {
                 perf_ctrl.reset();
             }
-            let clock_msg = mult_clock_recv.try_recv();
+            let clock_msg = midi_clock_recv.try_recv();
             if clock_msg.is_ok() {
                 // let now = SystemTime::now();
                 perf_ctrl.clock();
@@ -107,7 +107,7 @@ impl PerformanceController {
         let playlist_index = self.scene_index % self.perf.playlist.len();
         let scene_name = &self.perf.playlist[playlist_index].to_string();
 
-        let bar_count = self.bar_count.to_owned();
+        // let bar_count = self.bar_count.to_owned();
 
         for scene in self.perf.scenes.iter().filter(|s| &s.name == scene_name) {
             for track in scene.tracks.iter() {
@@ -115,14 +115,7 @@ impl PerformanceController {
                     match self.players.get_mut(&track.instrument) {
                         Some(player) => {
                             player.instrument = inst.clone();
-                            if track.follow.is_none() {
-                                player.seq_name =
-                                    track.play[bar_count % track.play.len()].to_string();
-                            } else {
-                                // Followers use their own bar count instead
-                                player.seq_name =
-                                    track.play[player.bar_count % track.play.len()].to_string();
-                            }
+                            player.seq_name = track.play[player.bar_count % track.play.len()].to_string();
                         },
                         None => {
                             let seq_name =
@@ -145,13 +138,24 @@ impl PerformanceController {
         self.init_scene();
     }
 
+    pub fn stop_all_notes(&mut self) {
+        let mut device_manager = &mut self.device_manager;
+
+        for (_, player) in self.players.iter_mut() {
+            player.note_off_all(device_manager);
+        }
+    }
+
     pub fn init_scene(&mut self) {
+        self.stop_all_notes();
+
         let playlist_index = self.scene_index % self.perf.playlist.len();
         let scene_name = &self.perf.playlist[playlist_index].to_string();
 
         for scene in self.perf.scenes.iter().filter(|s| &s.name == scene_name) {
             for track in &scene.tracks {
                 for inst in self.perf.instruments.iter().filter(|i| &i.name == &track.instrument) {
+
                     let seq_name =
                         track.play[self.bar_count % track.play.len()].to_string();
                     self.players.insert(
@@ -187,18 +191,18 @@ impl PerformanceController {
         let scene_name = &self.perf.playlist[playlist_index].to_string();
 
 
-        let bar_count = self.bar_count.to_owned();
+        // let bar_count = self.bar_count.to_owned();
 
         // Advance non-follower sequence players
-        for scene in self.perf.scenes.iter().filter(|s| &s.name == scene_name) {
-            for track in scene.tracks.iter().filter(|t| t.follow.is_none()) {
-                self.players.get_mut(&track.instrument).map(|player| {
-                    player.reset();
-                    player.seq_name =
-                        track.play[bar_count  % track.play.len()].to_string();
-                });
-            }
-        }
+        // for scene in self.perf.scenes.iter().filter(|s| &s.name == scene_name) {
+        //     for track in scene.tracks.iter().filter(|t| t.follow.is_none()) {
+        //         self.players.get_mut(&track.instrument).map(|player| {
+        //             player.reset();
+        //             player.seq_name =
+        //                 track.play[bar_count % track.play.len()].to_string();
+        //         });
+        //     }
+        // }
 
         if next_scene {
             log::event(format!("SCENE {}/{} \"{}\" ", self.scene_index, self.perf.playlist.len(), scene_name), 0);
@@ -206,12 +210,12 @@ impl PerformanceController {
     }
 
     pub fn clock(&mut self) {
+        let mut play_next_bar = false;
 
-        if self.clock_count % TICKS_PER_MEASURE as usize == 0 {
-            // println!("ticker per bar = {}", self.clock_count);
-            self.clock_count = 0;
-            self.next_bar();
-        }
+        // if self.clock_count % TICKS_PER_MEASURE as usize == 0 {
+        // self.clock_count = 0;
+        // self.next_bar();
+        // }
 
         let playlist_index = self.scene_index % self.perf.playlist.len();
         let scene_name = &self.perf.playlist[playlist_index].to_string();
@@ -219,11 +223,24 @@ impl PerformanceController {
         let mut device_manager = &mut self.device_manager;
 
         for scene in self.perf.scenes.iter().filter(|s| &s.name == scene_name) {
+            let first_track = &scene.tracks[0];
             let mut note_played: HashMap<String, bool> = HashMap::new();
             // First clock all the non-followers
             for track in scene.tracks.iter().filter(|t| t.follow.is_none()) {
+                let is_first_track = track.instrument == first_track.instrument;
                 self.players.get_mut(&track.instrument).map(|player| {
-                    note_played.insert(track.instrument.to_string(), player.clock(&mut device_manager));
+                    player.seq_name =
+                        track.play[player.bar_count % track.play.len()].to_string();
+                    let player_result = player.clock(&mut device_manager);
+
+                    if player_result.sequence_ended {
+                        player.next_bar(device_manager);
+
+                        if is_first_track {
+                            play_next_bar = true;
+                        }
+                    }
+                    note_played.insert(track.instrument.to_string(), player_result.note_was_played);
                 });
             }
             // Then clock all the followers
@@ -232,7 +249,7 @@ impl PerformanceController {
                     let follow_name = track.follow.as_ref().unwrap_or(&String::from("")).to_string();
                     let note_was_played = note_played.get(&follow_name).unwrap_or(&false);
                     if *note_was_played {
-                        player.next_bar(&mut device_manager);
+                        player.next_bar(device_manager);
                         player.seq_name =
                             track.play[player.bar_count  % track.play.len()].to_string();
                     }
@@ -242,5 +259,9 @@ impl PerformanceController {
         }
 
         self.clock_count += 1;
+
+        if play_next_bar {
+            self.next_bar();
+        }
     }
 }
