@@ -21,9 +21,7 @@ extern crate portmidi;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::{thread, time};
 
-use spin_sleep;
-
-use crate::config::{CLOCK_MULTIPLIER, DEFAULT_PARTS_PER_QUARTER};
+use crate::config::{DEFAULT_PARTS_PER_QUARTER};
 use crate::context::Context;
 use crate::log;
 use crate::midi::start_midi_listener;
@@ -42,7 +40,7 @@ pub fn average(values: &[f64]) -> f64 {
 
 // Clock Multiplier --------------------------------------------------------------------------------
 
-pub fn start_clock_multiplier(
+/*pub fn start_clock_multiplier(
     clock_recv: Receiver<u64>,
     clock_active: Receiver<bool>,
     clock_send: Sender<u64>,
@@ -91,7 +89,7 @@ pub fn start_clock_multiplier(
             }
         }
     });
-}
+}*/
 
 // Main Controller ---------------------------------------------------------------------------------
 
@@ -99,20 +97,20 @@ pub fn start_controller(context: &Context) {
     let debug = context.debug;
 
     let (midi_clock_send, midi_clock_recv): (Sender<u64>, Receiver<u64>) = channel();
-    let (midi_state_send, midi_state_recv): (Sender<bool>, Receiver<bool>) = channel();
+    // let (midi_state_send, midi_state_recv): (Sender<bool>, Receiver<bool>) = channel();
     let (clock_reset_send, clock_reset_recv): (Sender<bool>, Receiver<bool>) = channel();
-    let (mult_clock_send, mult_clock_recv): (Sender<u64>, Receiver<u64>) = channel();
+    // let (mult_clock_send, mult_clock_recv): (Sender<u64>, Receiver<u64>) = channel();
     let (ctrl_updated_send, ctrl_updated_recv): (Sender<Controller>, Receiver<Controller>) =
         channel();
 
     let midi_recv = start_midi_listener();
 
-    start_clock_multiplier(midi_clock_recv, midi_state_recv, mult_clock_send);
+    // start_clock_multiplier(midi_clock_recv, midi_state_recv, mult_clock_send);
 
     let mut ctrl_def: Controller = start_performance(
         context,
         clock_reset_recv,
-        mult_clock_recv,
+        midi_clock_recv,
         ctrl_updated_send,
     );
 
@@ -180,8 +178,12 @@ pub fn start_controller(context: &Context) {
                         }
 
                         midi_clock_send
-                            .send((avg_dur_ms * 1000.0) as u64)
-                            .expect("midi_clock_send failed");
+                            .send(clock_count as u64)
+                            .expect("clock_multiplier send tick failed");
+
+                        // midi_clock_send
+                        //     .send((avg_dur_ms * 1000.0) as u64)
+                        //     .expect("midi_clock_send failed");
 
                         clock_count += 1;
                     } else if message.status == 250 {
@@ -199,7 +201,7 @@ pub fn start_controller(context: &Context) {
                         // Stop
                         clock_start_time = log::now_millis();
                         log::event("STOP".to_string(), log::now_millis() - clock_start_time);
-                        midi_state_send.send(false).expect("midi_state_send failed");
+                        // midi_state_send.send(false).expect("midi_state_send failed");
                         clock_reset_send
                             .send(true)
                             .expect("clock_reset_send failed");

@@ -27,7 +27,7 @@ use crate::midi::DeviceManager;
 use crate::models::{Controller, Performance};
 use crate::performance_file::{load_performance_file, start_file_watcher};
 use crate::sequence_player::SequencePlayer;
-use crate::config::{TICKS_PER_MEASURE, CLOCK_MULTIPLIER};
+use crate::config::{TICKS_PER_MEASURE};
 use crate::log;
 
 pub fn start_performance(
@@ -66,7 +66,7 @@ pub fn start_performance(
             let clock_msg = mult_clock_recv.try_recv();
             if clock_msg.is_ok() {
                 // let now = SystemTime::now();
-                perf_ctrl.clock(clock_msg.unwrap());
+                perf_ctrl.clock();
                 // println!("elapsed={}us", now.elapsed().unwrap().as_micros());
             }
             thread::sleep(wait_dur);
@@ -205,13 +205,7 @@ impl PerformanceController {
         }
     }
 
-    pub fn clock(&mut self, tick_count: u64) {
-
-
-        let quarter_count = self.clock_count as u64 % CLOCK_MULTIPLIER;
-        if quarter_count != tick_count {
-            println!("qc={} != tc={}", quarter_count, tick_count);
-        }
+    pub fn clock(&mut self) {
 
         if self.clock_count % TICKS_PER_MEASURE as usize == 0 {
             // println!("ticker per bar = {}", self.clock_count);
