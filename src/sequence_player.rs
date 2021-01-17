@@ -27,6 +27,9 @@ use crate::midi;
 use crate::midi::{DeviceManager, parse_midi_note};
 use crate::models::{Instrument};
 
+
+const DEFAULT_PLAY_RATE: u8 = 4; // Quarter note
+
 // ActiveNoteMap
 
 pub type ActiveNoteMap = HashMap<u8, usize>;
@@ -136,10 +139,9 @@ impl SequencePlayer {
         for sequence in instrument.sequences.iter().filter(|s| s.name == seq_name) {
             let total_steps = sequence.steps.len();
 
-            // TODO read this from sequence props and have a default
-            let rate: usize = 16; // 16th notes
+            let rate = sequence.rate.unwrap_or(DEFAULT_PLAY_RATE);
 
-            let ticks_per_step = TICKS_PER_MEASURE as usize / rate;
+            let ticks_per_step = TICKS_PER_MEASURE as usize / rate as usize;
 
             // Execute current step
             if self.clock_count % ticks_per_step == 0 && self.step_index < total_steps {
@@ -158,6 +160,8 @@ impl SequencePlayer {
                     step.velocity.as_ref().map(|value| velocity = parse_midi_note(&value));
 
                     step.pitch.as_ref().map(|notes| {
+                        let duration_rate = step.duration.unwrap_or(rate);
+                        let duration_ticks = TICKS_PER_MEASURE as usize / duration_rate as usize;
                         for note in notes {
                             let p = parse_midi_note(note);
                             messages.push(midi::note_on(
@@ -166,7 +170,7 @@ impl SequencePlayer {
                                 velocity,
                             ));
                             result.note_was_played = true;
-                            note_on_map.insert(p, ticks_per_step);
+                            note_on_map.insert(p, duration_ticks);
                         }
                     });
 

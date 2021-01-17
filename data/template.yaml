@@ -1,0 +1,335 @@
+controller:
+  device: "IAC Driver Bus 1"
+  #  device: "828x MIDI Port"
+  channel: 7
+  ppq: 24
+
+
+playlist:
+#  - one
+#  - one
+#  - one
+#  - one
+#  - two
+#  - two
+#  - two
+#  - two
+#  - three
+#  - three
+#  - three
+  - three
+
+scenes:
+  - name: one
+    tracks:
+      - { instrument: drum1, play: [ A ] }
+      - { instrument: inst1, play: [ A, B, C ]}
+
+  - name: two
+    tracks:
+      - { instrument: drum1, play: [ B ] }
+      - { instrument: inst1, play: [ A, B, C ], follow: drum1 }
+
+  - name: three
+    tracks:
+      - { instrument: drum1, play: [ A, B, C, A, B, C ] }
+      - { instrument: drum2, play: [ A ] }
+      - { instrument: inst1, play: [ Z, A, B, C ], follow: drum1 }
+
+instruments:
+  # general midi kick
+  - name: drum1
+    device: "828x MIDI Port"
+    channel: 14
+#    data:
+#      - device: "IAC Driver Bus 1"
+#        channel: 3
+#        control: 40
+    sequences:
+      - name: A
+        rate: 16
+        steps:
+          - { pitch: [ 36 ], velocity: 101, data: [ 70 ] }
+          - null
+          - null
+          - null
+
+          - null
+          - { pitch: [ 36 ], velocity: 102, data: [ 68 ] }
+          - null
+          - null
+
+          - { pitch: [ 36 ], velocity: 103, data: [ 38 ] }
+          - null
+          - null
+          - null
+
+          - null
+          - { pitch: [ 36 ], velocity: 104, data: [ 108 ] }
+          - null
+          - null
+
+      - name: B
+        rate: 16
+        steps:
+          - { pitch: [ 36 ], velocity: 101, data: [ 70 ] }
+          - null
+          - null
+          - null
+
+          - null
+          - null
+          - { pitch: [ 36 ], velocity: 102, data: [ 68 ] }
+          - null
+
+          - null
+          - { pitch: [ 36 ], velocity: 103, data: [ 38 ] }
+          - null
+          - null
+
+          - null # { pitch: [ 36 ], velocity: 104, data: [ 108 ] }
+          - null
+          - null
+          - null
+      - name: C
+        rate: 16
+        steps:
+          - { pitch: [ 36 ], velocity: 101, data: [ 70 ] }
+          - null
+          - null
+          - null
+
+          - null
+          - null
+          - { pitch: [ 36 ], velocity: 102, data: [ 68 ] }
+          - null
+
+
+          - { pitch: [ 36 ], velocity: 103, data: [ 38 ] }
+          - null
+          - null
+          - null
+
+          - { pitch: [ 36 ], velocity: 104, data: [ 108 ] }
+          - null
+          - null
+          - null
+
+  # general midi snare
+  - name: drum2
+    device: "828x MIDI Port"
+    channel: 14
+    data:
+      - device: "IAC Driver Bus 1"
+        channel: 3
+        control: 41
+    sequences:
+      - name: A
+        rate: 16
+        steps:
+          - null
+          - null
+          - null
+          - null
+
+          - { pitch: [ 38 ], velocity: 100, data: [ 120 ] }
+          - null
+          - null
+          - null
+
+          - null
+          - null
+          - null
+          - null
+
+          - { pitch: [ 38 ], velocity: 100, data: [ 60 ] }
+          - null
+          - null
+          - null
+
+  # general midi clap?
+  - name: drum3
+    device: "828x MIDI Port"
+    channel: 14
+    data:
+      - device: "IAC Driver Bus 1"
+        channel: 3
+        control: 42
+    sequences:
+      - name: A
+        steps:
+          - { pitch: [ 39 ], velocity: 93, data: [ 60 ] }
+          - { pitch: [ 39 ], velocity: 93, data: [ 60 ] }
+          - null
+          - null
+
+          - { pitch: [ 39 ], velocity: 93, data: [ 100 ] }
+          - { pitch: [ 39 ], velocity: 93, data: [ 100 ] }
+          - null
+          - null
+
+          - { pitch: [ 39 ], velocity: 93, data: [ 60 ] }
+          - { pitch: [ 39 ], velocity: 93, data: [ 60 ] }
+          - null
+          - null
+
+          - { pitch: [ 39 ], velocity: 93, data: [ 100 ] }
+          - { pitch: [ 39 ], velocity: 93, data: [ 100 ] }
+          - null
+          - null
+
+  # general midi close-hat?
+  - name: drum4
+    device: "828x MIDI Port"
+    channel: 14
+    data:
+      - device: "IAC Driver Bus 1"
+        channel: 3
+        control: 43
+    sequences:
+      - name: A
+        steps:
+          - null
+          - null
+          - { pitch: [ 42 ], velocity: 93, data: [ 60 ] }
+          - null
+
+          - null
+          - null
+          - { pitch: [ 42 ], velocity: 93, data: [ 90 ] }
+          - null
+
+          - null
+          - null
+          - { pitch: [ 42 ], velocity: 93, data: [ 60 ] }
+          - null
+
+          - null
+          - null
+          - { pitch: [ 42 ], velocity: 93, data: [ 90 ] }
+          - null
+
+  # external mono synth
+  - name: inst1
+    device: "IAC Driver Bus 1"
+    # device: "828x MIDI Port"
+    channel: 1
+    sequences:
+      - name: TIME_TEST
+        steps:
+          - { pitch: [ E3 ], velocity: 61 }
+          - null
+          - null
+          - null
+          - { pitch: [ F#3 ], velocity: 62 }
+          - null
+          - null
+          - null
+          - { pitch: [ G#3 ], velocity: 63 }
+          - null
+          - null
+          - null
+          - { pitch: [ B3 ], velocity: 64 }
+          - null
+          - null
+          - null
+      - name: Z
+        rate: 16
+        steps:
+          - { pitch: [ E2 ], velocity: 101 }
+          - { pitch: [ F#2 ], velocity: 102 }
+          - { pitch: [ G#2 ], velocity: 103 }
+          - { pitch: [ B2 ], velocity: 103 }
+      - name: A
+        rate: 24
+        steps:
+          - { pitch: [ E3 ], velocity: 101 }
+          - { pitch: [ F#3 ], velocity: 102 }
+          - { pitch: [ G#3 ], velocity: 103 }
+          - { pitch: [ B3 ], velocity: 103 }
+      - name: B
+        rate: 32
+        steps:
+          - { pitch: [ E4 ], velocity: 104 }
+          - { pitch: [ F#4 ], velocity: 105 }
+          - { pitch: [ G#4 ], velocity: 106 }
+          - { pitch: [ B4 ], velocity: 107 }
+      - name: C
+        rate: 48
+        steps:
+          - { pitch: [ E5 ], velocity: 108 }
+          - { pitch: [ F#5 ], velocity: 109 }
+          - { pitch: [ G#5 ], velocity: 110 }
+          - { pitch: [ B5 ], velocity: 111 }
+
+  # external mono synth
+  - name: inst2
+    device: "828x MIDI Port"
+    channel: 2
+    sequences:
+      - name: A
+        steps:
+          - { pitch: [ F#3 ], velocity: 118 }
+          - null
+          - null
+          - { pitch: [ G#3 ], velocity: 118 }
+
+          - { pitch: [ F#3 ], velocity: 118 }
+          - null
+          - { pitch: [ B3 ], velocity: 118 }
+          - null
+
+  # specsynth
+  - name: poly1
+    device: "IAC Driver Bus 1"
+    channel: 1
+    data:
+      # cell rule
+      - device: "IAC Driver Bus 1"
+        channel: 1
+        control: 10
+      # spectrum
+      - device: "IAC Driver Bus 1"
+        channel: 1
+        control: 11
+      # cv
+      - device: "IAC Driver Bus 1"
+        channel: 3
+        control: 44
+    sequences:
+      - name: A
+        steps:
+          - { pitch: [E3],  velocity: F#3,  data: [40, 7, 64] }
+          - { pitch: [F#3], velocity: G#3,  data: [41, 7, 64] }
+          - { pitch: [G#3], velocity: A3,   data: [42, 7, 110] }
+          - { pitch: [A3],  velocity: B3,   data: [43, 7, 110] }
+
+          - { pitch: [B3],  velocity: C#4,  data: [44, 7, 64] }
+          - { pitch: [C#4], velocity: D#4,  data: [45, 7, 64] }
+          - { pitch: [D#4], velocity: E4,   data: [46, 7, 110] }
+          - { pitch: [E4],  velocity: E3,   data: [47, 7, 110] }
+
+  # external midi polysynth
+  - name: poly2
+    device: "828x MIDI Port"
+    channel: 12
+    data:
+      # cv
+      - device: "IAC Driver Bus 1"
+        channel: 3
+        control: 45
+      # - device: "828x MIDI Port"
+      #   channel: 12
+      #   control: 50
+    sequences:
+      - name: A
+        steps:
+          - null
+          - { pitch: [ E3, G#3, B3 ], velocity: 118, data: [ 60, 50 ] }
+          - null
+          - { pitch: [ G#3, B3, D#4 ], velocity: 118, data: [ 120, 110 ] }
+
+          - null
+          - null
+          - null
+          - null

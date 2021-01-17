@@ -92,6 +92,7 @@ impl Clone for Scene {
 pub struct SequenceStep {
     pub pitch: Option<Vec<String>>,
     pub velocity: Option<String>,
+    pub duration: Option<u8>,
     pub data: Option<Vec<u8>>,
     pub program: Option<u8>,
 }
@@ -104,6 +105,7 @@ impl Clone for SequenceStep {
                 None => None,
             },
             velocity: self.velocity.to_owned(),
+            duration: self.duration.to_owned(),
             data: match &self.data {
                 Some(d) => Some(d.to_vec()),
                 None => None,
@@ -118,23 +120,15 @@ impl Clone for SequenceStep {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Sequence {
     pub name: String,
+    pub rate: Option<u8>,
     pub steps: Vec<Option<SequenceStep>>,
-}
-
-impl Sequence {
-    #[allow(dead_code)]
-    pub fn new() -> Sequence {
-        Sequence {
-            name: String::new(),
-            steps: Vec::new(),
-        }
-    }
 }
 
 impl Clone for Sequence {
     fn clone(&self) -> Sequence {
         Sequence {
             name: self.name.to_string(),
+            rate: self.rate.to_owned(),
             steps: self.steps.to_vec(),
         }
     }
